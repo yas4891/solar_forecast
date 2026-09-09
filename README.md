@@ -1,24 +1,87 @@
 # Solar Forecast Card
 
+[![Latest release](https://img.shields.io/github/v/release/yas4891/solar_forecast?style=flat-square)](https://github.com/yas4891/solar_forecast/releases/latest)
+[![HACS custom repository](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square)](https://hacs.xyz)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Validate](https://github.com/yas4891/solar_forecast/actions/workflows/manual-quality.yml/badge.svg)](https://github.com/yas4891/solar_forecast/actions/workflows/manual-quality.yml)
+
 Solar Forecast Card is a Home Assistant dashboard card.
 It displays combined Forecast.Solar energy forecasts.
 
-## Status
+## Installation
 
-The release version is `0.1.0`.
-The card does not display a version badge.
-The project has no approved screenshots.
+### HACS installation
 
-The target Home Assistant version is 2026.9.1.
-The project uses automated checks before a release.
-The project does not start, test, or change a Home Assistant instance.
-The project does not run browser or Playwright checks.
+This repository is available as a HACS custom repository.
 
-The implementation uses `forecast_solar.get_forecast`.
-The automated checks use controlled Home Assistant API fixtures.
-The checks cover service responses and source discovery behavior.
-The checks do not use production data or the Forecast.Solar network service.
-See [release verification](docs/release-verification.md) for the test scope.
+[![Open this repository in your Home Assistant instance](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=yas4891&repository=solar_forecast&category=plugin)
+
+1. Select the button above on a device that can open Home Assistant.
+2. Confirm the custom repository as type **Dashboard**.
+3. Open HACS and select **Solar Forecast Card**.
+4. Select **Download**.
+5. Reload the browser when HACS finishes.
+6. Add the card through the dashboard editor.
+
+HACS usually registers the dashboard resource automatically.
+Add this resource manually only when Home Assistant does not load the card:
+
+```yaml
+url: /hacsfiles/solar_forecast/solar_forecast.js
+type: module
+```
+
+### Local installation
+
+1. Download `solar_forecast.js` from the [latest release](https://github.com/yas4891/solar_forecast/releases/latest).
+2. Copy it to `/config/www/solar_forecast/solar_forecast.js`.
+3. Register this Home Assistant dashboard resource:
+
+```yaml
+url: /local/solar_forecast/solar_forecast.js
+type: module
+```
+
+4. Reload the browser.
+5. Add `custom:solar-forecast-card` through the dashboard editor.
+
+## Configuration
+
+Use this configuration for the card:
+
+```yaml
+type: custom:solar-forecast-card
+```
+
+The card finds all enabled Forecast.Solar entries automatically.
+You do not select forecast sources.
+
+Set `production_today_entity` to show produced energy for today:
+
+```yaml
+type: custom:solar-forecast-card
+production_today_entity: sensor.solar_energy_today
+```
+
+The sensor must measure the total energy from all displayed solar systems.
+The sensor must use Wh, kWh, or MWh.
+Do not use a power sensor with W or kW.
+
+Set `language` to select a card language:
+
+```yaml
+type: custom:solar-forecast-card
+language: de
+```
+
+The card supports English and German.
+The configured `language` value has first priority.
+Home Assistant supplies the language when this value is not set.
+The browser supplies the language when Home Assistant reports no language.
+The card uses English when no supported language is available.
+
+The visual editor provides the same configuration fields.
+See [translations](docs/translations.md) to add a language.
 
 ## Card display
 
@@ -31,14 +94,11 @@ Future-day bars use a yellow-to-orange gradient.
 Today uses orange for produced energy.
 Today uses yellow for remaining forecast energy.
 
-Set an optional production sensor to show produced energy for today.
-The sensor must measure the total energy from all displayed solar systems.
-Without this sensor, the card displays only the remaining forecast for today.
+Without a production sensor, the card displays only today's remaining forecast.
 
 The forecast provider can return a truncated last day.
-The card displays a truncated day with a dashed bar outline.
-The card keeps the truncated day visible.
-The card excludes the truncated day from the total, average, and bar scale.
+The card displays this day with a dashed bar outline.
+The card excludes this day from the total, average, and bar scale.
 The card marks the total as a subtotal.
 The total tooltip explains the excluded day.
 
@@ -55,47 +115,11 @@ The card does not require an API key, location, or panel data.
 The card detects each enabled Forecast.Solar entry automatically.
 The card counts each entry once.
 The card does not count planes already combined by an entry.
-The user does not select forecast sources.
 
 Home Assistant 2026.9.1 provides `forecast_solar.get_forecast` in its source code.
 This service does not require Energy dashboard forecast mappings.
 Older Home Assistant versions can use a limited fallback.
 See [data sources](docs/data-sources.md) for source and fallback details.
-
-## Configuration
-
-Use this configuration for the card:
-
-```yaml
-type: custom:solar-forecast-card
-```
-
-Set `production_today_entity` to display produced energy for today:
-
-```yaml
-type: custom:solar-forecast-card
-production_today_entity: sensor.solar_energy_today
-```
-
-The sensor must use an energy unit.
-Use Wh, kWh, or MWh.
-Do not use a power sensor with W or kW.
-
-Set `language` to select a card language:
-
-```yaml
-type: custom:solar-forecast-card
-language: de
-```
-
-The card supports English and German.
-The card first uses the configured `language` value.
-Without that value, the card uses the Home Assistant language.
-Without a Home Assistant language, the card uses the browser language.
-Without a supported language, the card uses English.
-
-The visual editor provides the same configuration fields.
-See [translations](docs/translations.md) to add a language.
 
 ## Warnings
 
@@ -110,38 +134,7 @@ An omitted production sensor is not a data error.
 A service schema error shows the triangle immediately.
 This error means that Home Assistant cannot accept the request or supply the expected response.
 
-## Local installation
-
-Download `solar_forecast.js` from the GitHub release.
-You can also create the file with a local build.
-
-1. Copy `solar_forecast.js` to `/config/www/solar_forecast/solar_forecast.js`.
-2. Add the dashboard resource below.
-
-```yaml
-url: /local/solar_forecast/solar_forecast.js
-type: module
-```
-
-## HACS installation
-
-The HACS user interface calls this repository type **Dashboard**.
-The HACS backend calls this repository type `plugin`.
-
-1. Open **Custom repositories** in HACS.
-2. Add `yas4891/solar_forecast` as a repository.
-3. Select **Dashboard** as the repository type.
-4. Select **Add**.
-5. Open **Solar Forecast Card** in HACS.
-6. Select **Download**.
-
-[Install Solar Forecast Card with HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=yas4891&repository=solar_forecast&category=plugin)
-
-Install the card from the first public release.
-
 ## Development and releases
-
-The approved first release is `v0.1.0`.
 
 The project runs automated unit and integration checks only before a release.
 The project does not run browser or Playwright checks.
