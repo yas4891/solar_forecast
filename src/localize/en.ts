@@ -1,0 +1,43 @@
+import type { Dictionary } from "./types";
+
+export const en: Dictionary = {
+  title: "Solar forecast",
+  remaining: "REMAINING",
+  period: "PERIOD",
+  average: "AVG",
+  perDay: "/day",
+  today: "Today",
+  tomorrow: "Tomorrow",
+  produced: "Produced",
+  forecast: "Forecast",
+  total: "Total",
+  productionNotConfigured:
+    "Only the remaining forecast is shown because no production sensor is configured.",
+  productionMissing: "The configured production sensor has no valid energy value.",
+  productionPercent: "Produced: {percent}%",
+  periodRestOnly:
+    "Today includes only the remaining forecast because no production sensor is configured.",
+  periodHelp: "The period adds up the displayed days. The average uses complete days only.",
+  periodIncomplete: "The total is marked because not every displayed day is complete.",
+  approximate: "≈",
+  sourcesPartial: "{count} of {total} sources provide data.",
+  dayPartial: "The forecast time series for this day is incomplete.",
+  noForecast: "No complete solar forecast is available.",
+  incomplete: "Forecast data is incomplete.",
+  warning: "Forecast warning",
+  configuration: "Configuration",
+  name: "Title",
+  language: "Language",
+  languageAuto: "Automatic (Home Assistant)",
+  productionTodayEntity: "Today's production sensor",
+  productionTodayHelp: "Optional energy sensor for the total production today.",
+  invalidLanguage: "The selected language is not available. English is used.",
+  warningConnection: "Home Assistant is not connected.",
+  warningSources: "Forecast.Solar sources cannot be discovered.",
+  warningForecast: "A Forecast.Solar forecast is unavailable.",
+  warningIncomplete: "Forecast data is incomplete.",
+  warningEnergy: "A forecast energy value is invalid.",
+  warningProduction: "The configured production sensor is invalid.",
+  warningSchema:
+    "The forecast response is incompatible. Check card compatibility with Home Assistant.",
+};
