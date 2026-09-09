@@ -88,6 +88,9 @@ See [translations](docs/translations.md) to add a language.
 The card displays five days at most.
 The display period contains today and four future days at most.
 The card keeps a fixed card size when the day count changes.
+Use the Home Assistant layout editor to set the card height.
+The card uses eight grid rows by default.
+The layout editor allows at least four grid rows.
 
 The highest complete daily value sets the bar scale.
 Future-day bars use a yellow-to-orange gradient.

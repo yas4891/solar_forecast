@@ -1,8 +1,8 @@
 # Release process
 
 The project does not release source changes automatically.
-The current source version is `0.1.0`.
-The approved first release is `v0.1.0`.
+The current source version is `0.2.0`.
+The approved release is `v0.2.0`.
 
 Before a later release, propose the exact version.
 Wait for explicit approval for that version.
@@ -28,7 +28,7 @@ After approval, the release process will:
 10. Verify the tag, release asset, and clean Git status.
 
 The tag and GitHub release title will match exactly.
-For example, both will use `v0.1.0`.
+For this release, both use `v0.2.0`.
 
 The changelog will contain one user-visible change per bullet.
 It will use simple English.

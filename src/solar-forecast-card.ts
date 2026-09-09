@@ -65,7 +65,7 @@ export class SolarForecastCard extends LitElement {
   }
 
   public getGridOptions(): Record<string, number> {
-    return { rows: 8, columns: 12, min_rows: 8, min_columns: 6 };
+    return { rows: 8, columns: 12, min_rows: 4, min_columns: 6 };
   }
 
   public static async getConfigElement(): Promise<HTMLElement> {
@@ -381,7 +381,7 @@ export class SolarForecastCard extends LitElement {
       <section class="card" aria-label="${this.config.name || this.text("title")}">
         <header>
           <div class="title">
-            <span class="sun" aria-hidden="true">☀</span>
+            <ha-icon class="sun" icon="mdi:solar-power" aria-hidden="true"></ha-icon>
             <h1>${this.config.name || this.text("title")}</h1>
           </div>
           <div class="summary-wrap">
@@ -433,6 +433,11 @@ export class SolarForecastCard extends LitElement {
   }
 
   static styles = css`
+    :host,
+    ha-card,
+    .card {
+      height: 100%;
+    }
     :host {
       display: block;
       container-type: inline-size;
@@ -440,6 +445,7 @@ export class SolarForecastCard extends LitElement {
       --forecast-orange: #ff9e0b;
     }
     ha-card {
+      box-sizing: border-box;
       overflow: visible;
       border: 1px solid var(--divider-color, #dedede);
       border-radius: 24px;
@@ -449,13 +455,14 @@ export class SolarForecastCard extends LitElement {
     }
     .card {
       box-sizing: border-box;
-      min-height: 366px;
+      min-height: 0;
       padding: 28px 24px 20px;
       position: relative;
+      display: grid;
+      grid-template-rows: 58px minmax(0, 1fr);
+      gap: 10px;
     }
     header {
-      height: 79px;
-      min-height: 79px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto 26px;
       gap: 8px;
@@ -468,13 +475,16 @@ export class SolarForecastCard extends LitElement {
       min-width: 0;
     }
     .sun {
+      display: block;
       color: var(--forecast-orange);
-      font-size: 31px;
-      line-height: 1;
+      width: 24px;
+      height: 24px;
+      flex: 0 0 24px;
     }
     h1 {
       margin: 0;
-      font-size: 27px;
+      font-size: 1.1em;
+      font-weight: 600;
       line-height: 1.2;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -484,7 +494,9 @@ export class SolarForecastCard extends LitElement {
       position: relative;
       text-align: right;
       color: var(--secondary-text-color, #757575);
-      font-size: 16px;
+      font-size: clamp(10px, 2.15cqw, 16px);
+      min-width: 0;
+      max-width: min(60cqw, 430px);
     }
     .remaining {
       appearance: none;
@@ -494,13 +506,18 @@ export class SolarForecastCard extends LitElement {
       color: inherit;
       font: inherit;
       cursor: pointer;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
     }
     .remaining b {
       color: var(--forecast-orange);
     }
     .summary-wrap p {
-      margin: 18px 0 0;
+      margin: 8px 0 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
     }
     .warning-slot {
@@ -550,7 +567,7 @@ export class SolarForecastCard extends LitElement {
       right: 0;
     }
     .chart {
-      height: 276px;
+      min-height: 0;
       display: grid;
       grid-template-columns: repeat(var(--day-count, 5), minmax(44px, 1fr));
       align-items: stretch;
@@ -572,6 +589,7 @@ export class SolarForecastCard extends LitElement {
       font: inherit;
       width: 100%;
       padding: 12px 3px 0;
+      min-height: 0;
       display: grid;
       grid-template-rows: 23px 17px minmax(0, 1fr) 23px 20px;
       justify-items: center;
@@ -579,19 +597,21 @@ export class SolarForecastCard extends LitElement {
       cursor: pointer;
     }
     .day-button strong {
-      font-size: 20px;
+      font-size: clamp(14px, 2.8cqw, 20px);
       line-height: 23px;
+      white-space: nowrap;
     }
     .unit {
       color: var(--secondary-text-color, #777);
       font-size: 14px;
+      white-space: nowrap;
     }
     .track {
       align-self: end;
       position: relative;
       width: 48px;
       max-width: 72%;
-      height: 152px;
+      height: max(32px, calc(100% - 8px));
       margin-top: 8px;
       overflow: hidden;
       border-radius: 15px 15px 6px 6px;
@@ -626,6 +646,10 @@ export class SolarForecastCard extends LitElement {
       margin-top: 7px;
       font-size: 17px;
       font-weight: 700;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .is-today .weekday {
       color: var(--forecast-orange);
@@ -633,6 +657,7 @@ export class SolarForecastCard extends LitElement {
     .date {
       color: var(--secondary-text-color, #777);
       font-size: 14px;
+      white-space: nowrap;
     }
     .empty {
       grid-column: 1 / -1;
@@ -649,38 +674,17 @@ export class SolarForecastCard extends LitElement {
       .card {
         padding: 20px 12px 16px;
       }
-      header {
-        height: 99px;
-        grid-template-columns: minmax(0, 1fr) 22px;
-      }
-      .summary-wrap {
-        grid-column: 1;
-        grid-row: 2;
-        text-align: left;
-      }
-      .summary-wrap p {
-        margin-top: 6px;
-        white-space: normal;
-      }
-      .warning-slot {
-        grid-column: 2;
-        grid-row: 1;
-      }
       h1 {
-        font-size: 22px;
+        font-size: 1.1em;
       }
       .chart {
-        margin-top: 17px;
         gap: 2px;
       }
       .track {
         width: 39px;
       }
-      .day-button strong {
-        font-size: 16px;
-      }
       .weekday {
-        font-size: 14px;
+        font-size: clamp(11px, 3.3cqw, 14px);
       }
     }
     @media (prefers-reduced-motion: reduce) {

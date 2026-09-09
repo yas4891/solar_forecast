@@ -236,7 +236,15 @@ Die Farben erhalten ausreichend erkennbare Grenzen, auch im dunklen Design.
 Alle dargestellten Tage behalten dieselbe Balkenbreite innerhalb derselben Bildschirmgröße.
 Bei weniger Tagen verteilt die Karte den freien Platz gleichmäßig.
 Die Höhe von Kopfbereich, Diagramm und Beschriftungen hängt nicht von der Tagesanzahl ab.
+Der Kopfbereich ordnet Icon und Titel links an.
+Er ordnet Restprognose rechts auf Icon-Höhe an.
+Die Zeitraumzeile steht darunter rechts und bleibt einzeilig.
+Die Karte verwendet `mdi:solar-power` als Icon.
+Die Titelgröße entspricht der PV Payback Card mit `font-size: 1.1em` und `font-weight: 600`.
 Die Karte unterstützt die Größenangaben für klassische Dashboards und das Sections-Raster.
+Der Home-Assistant-Layout-Editor steuert die Kartenhöhe über `grid_options.rows`.
+Die Karte verwendet standardmäßig acht Rasterzeilen.
+Der Editor erlaubt mindestens vier Rasterzeilen und keine obere Begrenzung.
 
 Unvollständige Tage erhalten eine erkennbare Markierung am Balken, die das Layout nicht verändert.
 Der Tooltip nennt bei einem solchen Tag die Anzahl liefernder Quellen von allen erwarteten Quellen.
@@ -300,7 +308,7 @@ Die erste freigegebene Veröffentlichung ist `v0.1.0`.
 - Der Release-Commit lautet beispielsweise `Release v0.1.0`.
 - Veröffentlichte Tags werden nicht verschoben. Nachträgliche Korrekturen erhalten eine neue Version.
 
-`CHANGELOG.md` erhält beim Release einen Abschnitt `0.1.0 - YYYY-MM-DD`.
+`CHANGELOG.md` erhält beim Release einen Abschnitt mit der freigegebenen Versionsnummer und dem Datum.
 Die Datei behält außerdem einen leeren Abschnitt `Unreleased`, entsprechend dem Vergleichsprojekt.
 Einträge erscheinen auf Englisch, aus Nutzersicht und mit genau einer Änderung pro Aufzählungspunkt.
 Während gewöhnlicher Entwicklung sammeln wir Änderungen in Arbeitsnotizen. Die Changelog-Aktualisierung erfolgt erst beim freigegebenen Release.
@@ -410,10 +418,12 @@ Sie verwenden keine Home-Assistant-Instanz, keine Produktionsdaten und keine Zug
 - [Home Assistant Energy WebSocket API](https://github.com/home-assistant/core/blob/master/homeassistant/components/energy/websocket_api.py)
 - [HACS-Anforderungen für Dashboardkarten](https://hacs.xyz/docs/publish/plugin/)
 
-## 13. Release-Status `v0.1.0`
+## 13. Release-Status `v0.2.0`
 
-Der Benutzer hat Release `v0.1.0` freigegeben.
-Die frühere Planung bleibt als historische Grundlage erhalten.
-Die automatisierte Releaseprüfung prüft Serviceantworten, Quellenerkennung und Kartenverhalten mit kontrollierten API-Fixtures.
+Der Benutzer hat Release `v0.2.0` freigegeben.
+Die automatisierte Releaseprüfung ist abgeschlossen.
+Alle 45 Tests in 11 Dateien bestanden.
+Formatprüfung, Linting, Typprüfung und Build bestanden.
+Sie prüft Serviceantworten, Quellenerkennung und Kartenverhalten mit kontrollierten API-Fixtures.
 Sie startet oder verändert keine Home-Assistant-Instanz.
-Sie enthält keine Browser- oder Sichtprüfung.
+Sie enthält keine Browser-, Playwright- oder Sichtprüfung.

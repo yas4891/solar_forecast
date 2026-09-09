@@ -53,9 +53,32 @@ describe("SolarForecastCard", () => {
     card.remove();
   });
 
-  it("uses a stable card size and rejects another card type", () => {
+  it("uses Home Assistant grid layout options and rejects another card type", () => {
     const card = new SolarForecastCard();
     expect(card.getCardSize()).toBe(8);
+    expect(card.getGridOptions()).toEqual({
+      rows: 8,
+      columns: 12,
+      min_rows: 4,
+      min_columns: 6,
+    });
+    expect(card.getGridOptions()).not.toHaveProperty("max_rows");
     expect(() => card.setConfig({ type: "entities" })).toThrow("Invalid configuration");
+  });
+
+  it("puts the solar icon and summary values in the card header", async () => {
+    const card = new SolarForecastCard();
+    card.hass = { states: {}, config: { time_zone: "Europe/Berlin" } };
+    card.setConfig({ type: "custom:solar-forecast-card", language: "en" });
+    document.body.append(card);
+    (card as unknown as { model: CardViewModel }).model = model;
+    await card.updateComplete;
+
+    const header = card.shadowRoot?.querySelector("header");
+    const summary = header?.querySelector(".summary-wrap");
+    expect(header?.querySelector("ha-icon[icon='mdi:solar-power']")).not.toBeNull();
+    expect(summary?.querySelector(".remaining")?.textContent).toContain("REMAINING");
+    expect(summary?.querySelector("p")?.textContent).toContain("PERIOD");
+    card.remove();
   });
 });

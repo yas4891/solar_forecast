@@ -3,6 +3,20 @@ import { SolarForecastCardEditor } from "../src/editor";
 import type { CardConfig } from "../src/types";
 
 describe("SolarForecastCardEditor", () => {
+  it("shows only title, language, and daily production configuration", async () => {
+    const editor = new SolarForecastCardEditor();
+    editor.setConfig({ type: "custom:solar-forecast-card", language: "en" });
+    document.body.append(editor);
+    await editor.updateComplete;
+
+    expect(editor.shadowRoot?.querySelectorAll("ha-textfield")).toHaveLength(1);
+    expect(editor.shadowRoot?.querySelectorAll("ha-select")).toHaveLength(1);
+    expect(editor.shadowRoot?.querySelectorAll("ha-entity-picker")).toHaveLength(1);
+    expect(editor.shadowRoot?.querySelector("[name='height'], #height, .height")).toBeNull();
+    expect(editor.shadowRoot?.textContent?.toLowerCase()).not.toContain("height");
+    editor.remove();
+  });
+
   it("updates translated fields and removes an optional production sensor", async () => {
     const editor = new SolarForecastCardEditor();
     const changes: CardConfig[] = [];
@@ -35,6 +49,7 @@ describe("SolarForecastCardEditor", () => {
       value: string;
     };
     expect(title.value).toBe("Solar roof");
+    expect(changes.at(-1)).not.toHaveProperty("height");
     editor.remove();
   });
 });

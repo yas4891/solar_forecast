@@ -3,7 +3,7 @@
 Solar Forecast Card is a Home Assistant custom card.
 Its card type is `custom:solar-forecast-card`.
 The local build creates `dist/solar_forecast.js`.
-The project prepares release `v0.1.0`.
+The current release is `v0.2.0`.
 
 The implementation uses TypeScript, Lit, and Vite.
 It keeps the card, data access, calculations, and locales separate.

@@ -46,8 +46,8 @@ export class SolarForecastCardEditor extends LitElement {
         .label=${this.t("name")}
         .value=${this.config.name || ""}
         @input=${this.onText}
-      ></ha-textfield
-      ><ha-select
+      ></ha-textfield>
+      <ha-select
         .label=${this.t("language")}
         .value=${this.config.language || ""}
         @selected=${this.onLanguage}
@@ -57,7 +57,8 @@ export class SolarForecastCardEditor extends LitElement {
         ).map(
           ([code, locale]) => html`<mwc-list-item value=${code}>${locale.name}</mwc-list-item>`,
         )}</ha-select
-      ><ha-entity-picker
+      >
+      <ha-entity-picker
         .hass=${this.hass}
         .value=${this.config.production_today_entity || ""}
         .label=${this.t("productionTodayEntity")}
