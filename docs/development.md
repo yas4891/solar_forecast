@@ -26,3 +26,8 @@ Do not run browser or Playwright checks.
 Do not run token-intensive, time-intensive, or resource-intensive tests.
 
 HACS validation, commits, tags, pushes, and releases need separate approval.
+
+Run the `HACS validation` workflow only when HACS validation is approved.
+The workflow starts only with `workflow_dispatch`.
+It runs `hacs/action@main` with the `plugin` category.
+The workflow uses no secrets and runs no other checks.

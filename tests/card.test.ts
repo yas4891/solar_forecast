@@ -49,7 +49,7 @@ describe("SolarForecastCard", () => {
     await card.updateComplete;
     expect(card.shadowRoot?.querySelectorAll(".day")).toHaveLength(2);
     expect(card.shadowRoot?.querySelectorAll(".produced")).toHaveLength(1);
-    expect(card.shadowRoot?.textContent).toContain("REMAINING");
+    expect(card.shadowRoot?.textContent).not.toContain("REMAINING");
     card.remove();
   });
 
@@ -66,10 +66,14 @@ describe("SolarForecastCard", () => {
     expect(() => card.setConfig({ type: "entities" })).toThrow("Invalid configuration");
   });
 
-  it("puts the solar icon and summary values in the card header", async () => {
+  it("puts the solar icon and period summary below an untruncated title", async () => {
     const card = new SolarForecastCard();
     card.hass = { states: {}, config: { time_zone: "Europe/Berlin" } };
-    card.setConfig({ type: "custom:solar-forecast-card", language: "en" });
+    card.setConfig({
+      type: "custom:solar-forecast-card",
+      language: "en",
+      name: "Solar forecast with a long custom title",
+    });
     document.body.append(card);
     (card as unknown as { model: CardViewModel }).model = model;
     await card.updateComplete;
@@ -77,8 +81,29 @@ describe("SolarForecastCard", () => {
     const header = card.shadowRoot?.querySelector("header");
     const summary = header?.querySelector(".summary-wrap");
     expect(header?.querySelector("ha-icon[icon='mdi:solar-power']")).not.toBeNull();
-    expect(summary?.querySelector(".remaining")?.textContent).toContain("REMAINING");
-    expect(summary?.querySelector("p")?.textContent).toContain("PERIOD");
+    expect(header?.querySelector("h1")?.textContent).toBe("Solar forecast with a long custom title");
+    expect(summary?.querySelector(".period-summary")?.textContent).toContain("PERIOD");
+    expect(summary?.querySelector(".remaining")).toBeNull();
+    expect(summary?.querySelector("p")).toBeNull();
+
+    const button = summary?.querySelector<HTMLButtonElement>(".period-summary");
+    const tooltip = summary?.querySelector<HTMLElement>("#tooltip-summary");
+    expect(button?.getAttribute("aria-describedby")).toBe("tooltip-summary");
+    button?.dispatchEvent(new FocusEvent("focus"));
+    await card.updateComplete;
+    expect(tooltip?.hidden).toBe(false);
+    button?.dispatchEvent(new FocusEvent("blur"));
+    await card.updateComplete;
+    expect(tooltip?.hidden).toBe(true);
+    button?.dispatchEvent(new MouseEvent("mouseenter"));
+    await card.updateComplete;
+    expect(tooltip?.hidden).toBe(false);
+    button?.dispatchEvent(new MouseEvent("mouseleave"));
+    await card.updateComplete;
+    expect(tooltip?.hidden).toBe(true);
+    button?.click();
+    await card.updateComplete;
+    expect(tooltip?.hidden).toBe(false);
     card.remove();
   });
 });

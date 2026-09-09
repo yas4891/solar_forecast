@@ -237,8 +237,10 @@ Alle dargestellten Tage behalten dieselbe Balkenbreite innerhalb derselben Bilds
 Bei weniger Tagen verteilt die Karte den freien Platz gleichmäßig.
 Die Höhe von Kopfbereich, Diagramm und Beschriftungen hängt nicht von der Tagesanzahl ab.
 Der Kopfbereich ordnet Icon und Titel links an.
-Er ordnet Restprognose rechts auf Icon-Höhe an.
-Die Zeitraumzeile steht darunter rechts und bleibt einzeilig.
+Lange Titel umbrechen vollständig und werden niemals abgeschnitten.
+Die Karte zeigt keine sichtbare Restprognose im Kopfbereich.
+Die Zeitraumzeile steht links unter dem Titel und Icon.
+Sie bleibt einzeilig und öffnet ihre Erläuterung bei Hover, Fokus oder Klick.
 Die Karte verwendet `mdi:solar-power` als Icon.
 Die Titelgröße entspricht der PV Payback Card mit `font-size: 1.1em` und `font-weight: 600`.
 Die Karte unterstützt die Größenangaben für klassische Dashboards und das Sections-Raster.
@@ -332,6 +334,8 @@ Gewöhnliche Entwicklungsanfragen gelten nicht automatisch als Releaseauftrag.
 GitHub erhält keine Prüfungen auf gewöhnlichen `push`- oder `pull_request`-Ereignissen.
 Die vorhandene PV-Payback-Workflowdatei wird deshalb nicht unverändert übernommen.
 Eine optionale GitHub-Prüfung ist ausschließlich manuell startbar.
+Der manuelle Workflow `.github/workflows/hacs-validation.yml` führt `hacs/action@main` mit `category: plugin` aus.
+Er startet nur bei `workflow_dispatch` und verwendet weder Secrets noch zusätzliche Prüfungen.
 Der verbindliche Releaseprozess prüft vor Tag und Push den endgültigen lokalen Stand.
 HACS-Validierung läuft ausschließlich auf ausdrückliche Anforderung, auch bei Releases.
 
@@ -400,6 +404,8 @@ Die dokumentierte HACS-Ressource lautet `/hacsfiles/solar_forecast/solar_forecas
 
 Das erste Release ermöglicht die Installation als benutzerdefiniertes HACS-Repository.
 Eine Aufnahme in das allgemeine HACS-Verzeichnis gehört zu einem späteren, gesonderten Auftrag.
+Der manuelle GitHub-Workflow `HACS validation` prüft die Kategorie `plugin` mit `hacs/action@main`.
+Er startet ausschließlich über `workflow_dispatch` und benötigt keine Secrets.
 
 ## 12. Abnahme und noch benötigte Umgebung
 

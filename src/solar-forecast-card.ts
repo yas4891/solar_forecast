@@ -380,28 +380,27 @@ export class SolarForecastCard extends LitElement {
     return html` <ha-card>
       <section class="card" aria-label="${this.config.name || this.text("title")}">
         <header>
-          <div class="title">
-            <ha-icon class="sun" icon="mdi:solar-power" aria-hidden="true"></ha-icon>
-            <h1>${this.config.name || this.text("title")}</h1>
-          </div>
-          <div class="summary-wrap">
-            <button
-              class="remaining"
-              data-tooltip-trigger
-              aria-describedby="tooltip-${headerId}"
-              @click=${(event: Event) => this.toggleTooltip(event, headerId)}
-              @focus=${() => this.openOnFocus(headerId)}
-              @blur=${() => this.closeOnLeave(headerId)}
-              @mouseenter=${() => this.openOnFocus(headerId)}
-              @mouseleave=${() => this.closeOnLeave(headerId)}
-              aria-label="${this.text("remaining")}: ${this.formatEnergy(
-                model?.remainingKwh,
-              )} kWh. ${totalHeader}. ${summaryTooltip}"
-            >
-              <b>${this.text("remaining")}:</b> ${this.formatEnergy(model?.remainingKwh)} kWh
-            </button>
-            ${this.renderTooltip(headerId, summaryTooltip)}
-            <p>${totalHeader}</p>
+          <div class="header-content">
+            <div class="title">
+              <ha-icon class="sun" icon="mdi:solar-power" aria-hidden="true"></ha-icon>
+              <h1>${this.config.name || this.text("title")}</h1>
+            </div>
+            <div class="summary-wrap">
+              <button
+                class="period-summary"
+                data-tooltip-trigger
+                aria-describedby="tooltip-${headerId}"
+                @click=${(event: Event) => this.toggleTooltip(event, headerId)}
+                @focus=${() => this.openOnFocus(headerId)}
+                @blur=${() => this.closeOnLeave(headerId)}
+                @mouseenter=${() => this.openOnFocus(headerId)}
+                @mouseleave=${() => this.closeOnLeave(headerId)}
+                aria-label="${totalHeader}. ${summaryTooltip}"
+              >
+                ${totalHeader}
+              </button>
+              ${this.renderTooltip(headerId, summaryTooltip)}
+            </div>
           </div>
           <div class="warning-slot">
             ${this.warningVisible
@@ -459,14 +458,17 @@ export class SolarForecastCard extends LitElement {
       padding: 28px 24px 20px;
       position: relative;
       display: grid;
-      grid-template-rows: 58px minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 10px;
     }
     header {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto 26px;
+      grid-template-columns: minmax(0, 1fr) 26px;
       gap: 8px;
       align-items: start;
+    }
+    .header-content {
+      min-width: 0;
     }
     .title {
       display: flex;
@@ -486,19 +488,17 @@ export class SolarForecastCard extends LitElement {
       font-size: 1.1em;
       font-weight: 600;
       line-height: 1.2;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
     .summary-wrap {
       position: relative;
-      text-align: right;
       color: var(--secondary-text-color, #757575);
       font-size: clamp(10px, 2.15cqw, 16px);
       min-width: 0;
-      max-width: min(60cqw, 430px);
+      margin: 8px 0 0 37px;
     }
-    .remaining {
+    .period-summary {
       appearance: none;
       border: 0;
       padding: 0;
@@ -506,18 +506,6 @@ export class SolarForecastCard extends LitElement {
       color: inherit;
       font: inherit;
       cursor: pointer;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .remaining b {
-      color: var(--forecast-orange);
-    }
-    .summary-wrap p {
-      margin: 8px 0 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
     }
     .warning-slot {
