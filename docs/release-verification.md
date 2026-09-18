@@ -1,6 +1,27 @@
 # Release verification
 
-Release `v0.2.0` uses automated unit and integration checks.
+## v0.3.0 status
+
+Release `v0.3.0` is approved and verified locally.
+
+- `npm run format:check` passed.
+- `npm run lint` passed.
+- `npm run typecheck` passed.
+- `npm test` passed with 65 of 65 tests across 14 files.
+- `npm run build` passed.
+- `git diff --check` passed.
+
+The release asset is `dist/solar_forecast.js`.
+Its size is 71,136 bytes.
+Its gzip size is 19.71 kB.
+Its SHA-256 is `2b6618b7fbc62433a75e419dfd543c4cf3d8bae89aca4118d1e7dd91c0121332`.
+
+No browser, Playwright, HACS, Home Assistant, or container check ran.
+This document does not confirm a publication, commit, tag, or remote verification.
+
+## v0.2.0 verification
+
+Release `v0.2.0` used automated unit and integration checks.
 The checks use controlled Home Assistant API fixtures.
 The checks do not start, test, or change a Home Assistant instance.
 The checks do not call the Forecast.Solar network service.

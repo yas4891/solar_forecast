@@ -1,6 +1,6 @@
 # Solar Forecast Card – Umsetzungsplan
 
-Stand: 2026-09-07. Dieser Plan beschreibt die Erstellung. Er startet weder Implementierung noch Prüfungen oder Veröffentlichungen.
+Stand: 2026-09-18. Dieser Plan beschreibt die Erstellung. Er startet weder Implementierung noch Prüfungen oder Veröffentlichungen.
 
 ## 1. Verbindlicher Umfang
 
@@ -26,10 +26,15 @@ Stand: 2026-09-07. Dieser Plan beschreibt die Erstellung. Er startet weder Imple
 
 ### Grundbetrieb
 
-Die Karte verwendet die vorhandene Forecast.Solar-Integration in Home Assistant. API-Schlüssel bleiben in deren Konfiguration.
-Der Browser fragt Forecast.Solar nicht direkt ab.
+Die Karte verwendet eine unterstützte Prognoseintegration in Home Assistant.
+Sie unterstützt Forecast.Solar und Solcast PV Forecast.
+API-Schlüssel bleiben ausschließlich in der jeweiligen Integration.
+Der Browser fragt keinen Prognoseanbieter direkt ab.
 
-Der Standardbetrieb erfordert keine manuelle Auswahl einzelner Prognosesensoren.
+`forecast_provider` wählt nur den Anbieter.
+Die Karte wählt niemals einzelne Einträge, Standorte oder Flächen.
+
+Der Forecast.Solar-Betrieb erfordert keine manuelle Auswahl einzelner Prognosesensoren.
 Die Karte erkennt alle eingerichteten, aktivierten Forecast.Solar-Einträge und ihre zugehörigen Sensoren automatisch.
 Sie verwendet Integrationszuordnungen und technische Sensorkennungen statt übersetzter Namen oder geratener Entity-IDs.
 Die Karte addiert die heutigen Restwerte dieser Einträge.
@@ -41,6 +46,9 @@ Die Dokumentation erklärt bei Bedarf einen vorgeschalteten Tageszähler in Home
 ### Weitere Prognosetage
 
 Die Karte verwendet zentral verfügbare Prognosezeitreihen aus Home Assistant für morgen und weitere Tage.
+
+#### Forecast.Solar
+
 Die Architekturprüfung findet `forecast_solar.get_forecast` im Quellstand Home Assistant 2026.9.1.
 Das Quellenschema verwendet `config_entry` und unterstützt optional `resolution`.
 Die Karte ruft diese Antwortaktion automatisch je erkanntem Eintrag über die vorhandene Home-Assistant-Verbindung auf.
@@ -61,7 +69,9 @@ Er fließt nicht in Zeitraumsumme, Durchschnitt und gemeinsame Skala ein.
 Die Karte schreibt eine abgeschnittene Zeitreihe niemals fort und leitet keinen Tageswert aus einem anderen Tag ab.
 Eine fortgeschriebene Kurve wäre eine erfundene Zahl in der Gestalt einer Messung und widerspricht diesem Plan.
 Die Anbieterverfügbarkeit kann weniger als fünf Tage erlauben.
-Heute verwendet die automatisch erkannten Restsensoren. Folgetage verwenden pro Eintrag vorrangig dessen Zeitreihe, morgen ersatzweise dessen Morgensensor.
+Forecast.Solar verwendet heute die automatisch erkannten Restsensoren.
+Folgetage verwenden pro Eintrag vorrangig dessen Zeitreihe.
+Morgen kann ersatzweise dessen Morgensensor dienen.
 Sensorwert und Zeitreihe desselben Eintrags werden niemals miteinander addiert.
 
 ### Kartenvertrag und API-Fixtures
@@ -79,11 +89,14 @@ Das Projekt behauptet keine Prüfung mit einer echten Home-Assistant-Instanz.
 
 ### Auswahl und Zusammengehörigkeit
 
-Der Benutzer wählt keine Prognosequellen aus, auch bei mehreren Anlagen oder Flächen.
+Der Benutzer wählt niemals einzelne Prognosequellen aus.
+Das gilt auch bei mehreren Anlagen, Einträgen, Standorten oder Flächen.
+`forecast_provider` wählt ausschließlich die Anbieterart.
 Innerhalb eines Forecast.Solar-Eintrags kombiniert die Integration bereits dessen konfigurierte Flächen.
 Die Karte addiert diese fertigen Eintragssummen über alle aktivierten Forecast.Solar-Einträge.
 Jede eindeutige Eintrags-ID zählt genau einmal. Bereits enthaltene Flächen werden nicht zusätzlich addiert.
-Prognosen anderer Anbieter werden ausgeschlossen.
+Die Karte schließt den nicht gewählten unterstützten Anbieter aus.
+Sie schließt alle weiteren Prognoseanbieter ebenfalls aus.
 Neue oder entfernte Einträge aktualisieren die automatisch ermittelte Gesamtheit.
 Vorübergehend ausgefallene Einträge gelten weiterhin als erwartet und verschwinden nicht still aus der Berechnung.
 Automatische Erkennung folgt dem angenommenen API-Vertrag für normale Dashboardbenutzer.
@@ -186,26 +199,40 @@ Für sämtliche Fehlerhinweise gilt die folgende Darstellung, entsprechend der P
 Die Verzögerung betrifft ausschließlich die Fehleranzeige. Ungültige Daten werden auch während dieser Frist nicht als gültige Werte dargestellt.
 Die zuvor beschriebenen Fehlerhinweise verwenden dieses Warndreieck und dieselbe Verzögerung.
 Normale Leerzustände und die absichtliche Konfiguration ohne Tagesenergiesensor gelten nicht als Fehler.
-Die erste Version benötigt keine dauerhafte Browserhistorie und keine Recorder-Wiederherstellung.
+Die Karte speichert keine dauerhafte Browserhistorie und stellt keine Recorder-Daten wieder her.
+Der optionale Rückblick liest jedoch die erforderlichen historischen Entity-Zustände aus Home-Assistant-Recorder.
 
 ## 5. Konfiguration und Internationalisierung
 
-| Feld                      | Bedeutung                         | Standard               |
-| ------------------------- | --------------------------------- | ---------------------- |
-| `type`                    | `custom:solar-forecast-card`      | Pflicht                |
-| `name`                    | Optionaler eigener Kartentitel    | Lokalisierter Titel    |
-| `language`                | `de` oder `en`                    | Home-Assistant-Sprache |
-| `production_today_entity` | Tatsächlich erzeugte Tagesenergie | Nicht gesetzt          |
+| Feld                      | Bedeutung                                    | Standard               |
+| ------------------------- | -------------------------------------------- | ---------------------- |
+| `type`                    | `custom:solar-forecast-card`                 | Pflicht                |
+| `name`                    | Optionaler eigener Kartentitel               | Lokalisierter Titel    |
+| `language`                | `de` oder `en`                               | Home-Assistant-Sprache |
+| `forecast_provider`       | `forecast_solar` oder `solcast_solar`        | Automatisch            |
+| `production_today_entity` | Tatsächlich erzeugte Tagesenergie            | Nicht gesetzt          |
+| `history_forecast_entity` | Tagesprognose für den historischen Vergleich | Nicht gesetzt          |
 
-Quellen- und Prognosesensorfelder entfallen vollständig aus der Benutzerkonfiguration.
+Felder für einzelne Quellen und Prognosesensoren entfallen vollständig.
+`forecast_provider` wählt nur Forecast.Solar oder Solcast.
 Bei vorhandener Forecast.Solar-Integration genügt diese Konfiguration, auch mit mehreren Einträgen:
 
 ```yaml
 type: custom:solar-forecast-card
 ```
 
+Bei ausschließlich vorhandenem Solcast genügt dieselbe Konfiguration.
+Bei beiden Integrationen wählt die Automatik Forecast.Solar.
+Eine explizite Auswahl verwendet `forecast_provider`.
+
 Für den orangefarbenen Erzeugungsanteil ergänzt der Benutzer optional `production_today_entity`.
 Die Einrichtung verlangt weder einen zweiten API-Schlüssel noch Standort- oder Anlagendaten.
+
+Setzt der Benutzer zusätzlich `history_forecast_entity`, zeigt die Karte einen Vergleich für gestern.
+Die Karte liest die um 19:00 Uhr wirksame Prognose vorgestern und die letzte Erzeugung vor Mitternacht.
+Beide Werte benötigen Recorder-Historie und gültige Energieeinheiten.
+Fehlende Werte bleiben unvollständig und erscheinen nicht als null.
+Der Rückblick verändert nicht Zeitraum oder Durchschnitt, aber er erweitert die Balkenskala.
 
 Die Konfiguration funktioniert sowohl über YAML als auch über den visuellen Editor.
 Die automatische Erkennung und Aggregation gehören zum regulären Betrieb.
@@ -422,6 +449,12 @@ Sie verwenden keine Home-Assistant-Instanz, keine Produktionsdaten und keine Zug
 - [PV-Payback-Changelog](/Users/medic/projects/pv-payback-card/CHANGELOG.md)
 - [Home Assistant Forecast.Solar](https://www.home-assistant.io/integrations/forecast_solar/)
 - [Home Assistant Energy WebSocket API](https://github.com/home-assistant/core/blob/master/homeassistant/components/energy/websocket_api.py)
+- [Solcast PV Forecast](https://github.com/BJReplay/ha-solcast-solar)
+- [Solcast-Manifest](https://github.com/BJReplay/ha-solcast-solar/blob/main/custom_components/solcast_solar/manifest.json)
+- [Solcast-Aktionsvertrag](https://github.com/BJReplay/ha-solcast-solar/blob/main/custom_components/solcast_solar/actions.py)
+- [Solcast-Prognoseberechnung](https://github.com/BJReplay/ha-solcast-solar/blob/main/custom_components/solcast_solar/forecast.py)
+- [Solcast-Sensorvertrag](https://github.com/BJReplay/ha-solcast-solar/blob/main/custom_components/solcast_solar/sensor.py)
+- [Solcast-Prognosemodus](https://github.com/BJReplay/ha-solcast-solar/blob/main/custom_components/solcast_solar/select.py)
 - [HACS-Anforderungen für Dashboardkarten](https://hacs.xyz/docs/publish/plugin/)
 
 ## 13. Release-Status `v0.2.0`
@@ -433,3 +466,327 @@ Formatprüfung, Linting, Typprüfung und Build bestanden.
 Sie prüft Serviceantworten, Quellenerkennung und Kartenverhalten mit kontrollierten API-Fixtures.
 Sie startet oder verändert keine Home-Assistant-Instanz.
 Sie enthält keine Browser-, Playwright- oder Sichtprüfung.
+
+## 13.1 Release-Status `v0.3.0`
+
+Der Benutzer hat Release `v0.3.0` freigegeben.
+Die lokale Releaseprüfung ist abgeschlossen.
+Formatprüfung, Linting, Typprüfung, Build und `git diff --check` bestanden.
+Alle 65 Tests in 14 Dateien bestanden.
+Die Auslieferungsdatei lautet `dist/solar_forecast.js`.
+Sie hat 71.136 Bytes und eine gzip-Größe von 19,71 kB.
+Ihre SHA-256 lautet `2b6618b7fbc62433a75e419dfd543c4cf3d8bae89aca4118d1e7dd91c0121332`.
+Kein Browser, Playwright, HACS, Home Assistant oder Container lief.
+Es gibt noch keinen Veröffentlichungs-, Commit-, Tag- oder Remote-Nachweis.
+
+## 14. Geplante Solcast-Erweiterung
+
+Dieser Abschnitt erweitert den bestehenden Produktvertrag.
+Er plant Solcast-Unterstützung ohne Implementierung oder Veröffentlichung.
+
+### 14.1 Anbieterwahl
+
+Die Kartenkonfiguration erhält das optionale Feld `forecast_provider`.
+Zulässige Werte sind `forecast_solar` und `solcast_solar`.
+Ein fehlendes Feld bedeutet automatische Auswahl.
+
+```yaml
+type: custom:solar-forecast-card
+forecast_provider: solcast_solar
+```
+
+Der visuelle Editor zeigt Automatisch, Forecast.Solar und Solcast PV Forecast.
+Die Auswahl Automatisch entfernt `forecast_provider` aus der Konfiguration.
+Bestehende Konfigurationen bleiben dadurch unverändert gültig.
+
+Die automatische Auswahl folgt dieser festen Reihenfolge:
+
+| Forecast.Solar  | Solcast         | Gewählter Anbieter |
+| --------------- | --------------- | ------------------ |
+| vorhanden       | beliebig        | Forecast.Solar     |
+| nicht vorhanden | vorhanden       | Solcast            |
+| nicht vorhanden | nicht vorhanden | Keiner             |
+
+Vorhanden bedeutet ein aktivierter Home-Assistant-Konfigurationseintrag.
+Ein ungeladener Eintrag bleibt vorhanden.
+Ein vorübergehender Fehler ändert deshalb niemals die Anbieterwahl.
+Die Karte vermischt beide Anbieter niemals.
+
+Scheitert die Forecast.Solar-Erkennung im Automatikmodus, ist der Vorrang unbekannt.
+Die Karte wählt dann Solcast nicht stillschweigend.
+Sie zeigt stattdessen den bestehenden Erkennungsfehler.
+
+Eine explizite Auswahl verwendet ausschließlich den gewählten Anbieter.
+Sie fällt bei Fehlern nicht auf den anderen Anbieter zurück.
+Ein fehlender gewählter Anbieter erzeugt einen lokalisierten Konfigurationsfehler.
+Sein Warndreieck folgt der bestehenden Drei-Minuten-Frist.
+Der automatische Modus ohne Anbieter zeigt den bestehenden Leerzustand.
+
+Jede Karteninstanz darf einen eigenen Anbieter wählen.
+Eine Karte kann Forecast.Solar verwenden, während eine zweite Karte Solcast verwendet.
+
+### 14.2 Unterstützter Solcast-Vertrag
+
+Das erste Ziel ist `BJReplay/ha-solcast-solar` mit der Domain `solcast_solar`.
+Die Planung basiert auf Version `4.6.1`.
+Andere Forks oder Domains gehören nicht automatisch zum Umfang.
+
+Solcast erlaubt laut Manifest genau einen Konfigurationseintrag.
+Die Integration kombiniert alle berücksichtigten Solcast-Standorte bereits selbst.
+Die Karte behandelt diese Gesamtsumme als genau eine Quelle.
+Sie addiert keine Standort- oder Diagnosesensoren hinzu.
+Ausgeschlossene Standorte folgen ausschließlich der Solcast-Konfiguration.
+
+Die Erkennung verwendet Domain, Konfigurationseintrag, Plattform und `unique_id`.
+Anzeigenamen und generierte Entity-IDs spielen keine Rolle.
+Die Erkennung berücksichtigt folgende technische Entitäten:
+
+- Heutiger Rest: `get_remaining_today`.
+- Morgen: `total_kwh_forecast_tomorrow`.
+- Weitere Tage: `total_kwh_forecast_d3` bis `total_kwh_forecast_d5`.
+- Prognosemodus: `estimate_mode`.
+
+Version `4.6.1` erzeugt `get_remaining_today`.
+Nur tatsächlich aktivierte Tagesentitäten dienen als Sensorrückfall.
+
+`estimate_mode` liefert `estimate`, `estimate10` oder `estimate90`.
+Die Karte ordnet diese Werte den folgenden Antwortfeldern zu:
+
+| Solcast-Modus | Antwortfeld     |
+| ------------- | --------------- |
+| `estimate`    | `pv_estimate`   |
+| `estimate10`  | `pv_estimate10` |
+| `estimate90`  | `pv_estimate90` |
+
+Die Karte ruft `solcast_solar.query_forecast_data` mit Start und Ende auf.
+Der Bereich umfasst mindestens sechs Tage ab dem aktuellen Zeitpunkt.
+Die Antwort muss `response.data` als Liste enthalten.
+Jede Zeile muss `period_start` und das gewählte Leistungsfeld enthalten.
+
+Der WebSocket-Aufruf verwendet diesen Vertrag:
+
+```yaml
+type: call_service
+domain: solcast_solar
+service: query_forecast_data
+service_data:
+  start_date_time: <ISO-Zeitstempel>
+  end_date_time: <ISO-Zeitstempel>
+return_response: true
+```
+
+Die Karte lässt `site` weg und erhält dadurch Solcasts kombinierte Gesamtsumme.
+Sie lässt `undampened` weg und übernimmt dadurch die konfigurierte Dämpfung.
+
+Solcast liefert durchschnittliche Leistung in kW für halbstündliche Intervalle.
+Die Karte berechnet daraus Intervallenergie mit dieser Formel:
+
+`intervall_kWh = leistung_kW * 0,5 Stunden`
+
+Die Tageszuordnung verwendet weiterhin die Home-Assistant-Zeitzone.
+Die Karte gruppiert nur gültige Intervalle.
+Negative oder nichtnumerische Werte bleiben ungültig.
+
+Die Aktion liest den lokalen Solcast-Zwischenspeicher.
+Die Karte startet keine Solcast-Aktualisierung.
+Sie ruft niemals `update_forecasts` oder `force_update_forecasts` auf.
+Der Browser kontaktiert Solcast niemals direkt.
+
+Die Karte ruft `solcast_solar.get_options` niemals auf.
+Diese Aktion kann den API-Schlüssel unmaskiert zurückgeben.
+Die Karte liest oder speichert deshalb keinen Solcast-API-Schlüssel.
+
+### 14.3 Einheitliche Datenarchitektur
+
+Die Datenebene erhält eine kleine, anbieterneutrale Adaptergrenze.
+Ein neues allgemeines Framework ist nicht erforderlich.
+
+Der Forecast.Solar-Adapter bewahrt das bestehende Verhalten.
+Er erkennt weiterhin alle aktivierten Einträge.
+Er zählt jede Eintragsgesamtsumme genau einmal.
+
+Der Solcast-Adapter liefert genau eine kombinierte Quelle.
+Er normalisiert Restwert, Zeitreihe und Tagesrückfälle auf das bestehende Modell.
+Das Ansichtsmodell bleibt möglichst anbieterneutral.
+
+`ForecastPayload` enthält den tatsächlich gewählten Anbieter.
+Quellen und Fehler enthalten ebenfalls ihren Anbieter.
+Fehlerschlüssel enthalten den Anbieter als Namensraum.
+Warnfristen verschiedener Anbieter kollidieren dadurch nicht.
+
+Der Daten-Zwischenspeicher verwendet folgende Schlüssel:
+
+- Home-Assistant-Verbindung.
+- Gewählter Anbieter.
+- Solcast-Prognosemodus bei Solcast.
+
+Gleiche laufende Anfragen bleiben gemeinsam nutzbar.
+Unterschiedliche Anbieter teilen keine Antwort oder veraltete Daten.
+Ein geänderter Solcast-Prognosemodus verwirft seine bisherige Projektion.
+Verspätete Antworten einer früheren Kartenkonfiguration bleiben wirkungslos.
+
+Die Karte beobachtet alle tatsächlich verwendeten Entitäten.
+Dazu gehört bei Solcast auch `estimate_mode`.
+Eine Modusänderung aktualisiert die Darstellung ohne Seitenneuladen.
+
+### 14.4 Datenquellen und Rückfälle
+
+Forecast.Solar behält seinen bestehenden Datenfluss.
+`forecast_solar.get_forecast` bleibt die primäre Zeitreihenquelle.
+`energy/solar_forecast` bleibt dessen Kompatibilitätsrückfall.
+
+Solcast verwendet vorrangig `solcast_solar.query_forecast_data`.
+Ein fehlender Aktionsdienst erlaubt `energy/solar_forecast` als Kompatibilitätsrückfall.
+Dieser Rückfall verwendet nur den gewählten Solcast-Konfigurationseintrag.
+Er verlangt eine passende Zuordnung im Energie-Dashboard.
+
+Aktivierte Solcast-Tagessensoren bilden den letzten Rückfall.
+Der Restsensor bleibt für heute maßgeblich.
+Der Morgensensor kann einen fehlenden morgigen Zeitreihenwert ersetzen.
+Weitere aktivierte Tagessensoren können die Tage drei bis fünf ersetzen.
+
+Ein Schemafehler überspringt alle Rückfälle.
+Er erscheint sofort als bestehender `forecast_schema_invalid`-Fehler.
+Vorübergehende Aktionsfehler folgen der Drei-Minuten-Frist.
+Veraltete Daten bleiben ausschließlich innerhalb desselben Anbieters erhalten.
+
+Die Karte wechselt bei Laufzeitfehlern niemals den Anbieter.
+Diese Regel verhindert überraschende Zahlenwechsel und doppelte Summen.
+
+### 14.5 Vollständigkeit und Anzeige
+
+Solcasts kombinierte Reihe gilt als eine erwartete Quelle.
+Forecast.Solar behält seine Anzahl erwarteter Einträge.
+Das Ansichtsmodell verwendet beide Varianten mit denselben Vollständigkeitsregeln.
+
+Fehlende Werte sind niemals null.
+Fehlende zukünftige Tage entfallen weiterhin.
+Heute und abgeschnittene Horizonttage bleiben sichtbar und markiert.
+Markierte Tage bleiben aus Zeitraumssumme, Durchschnitt und gemeinsamer Skala ausgeschlossen.
+
+Die Intervallprüfung berücksichtigt halbstündliche Solcast-Werte.
+Prüffälle decken Tage mit 46, 48 und 50 Intervallen ab.
+Damit bleiben Sommerzeitwechsel korrekt.
+
+Die heutige Darstellung behält ihre bisherige Bedeutung.
+Sie addiert erzeugte Energie und verbleibende Prognose.
+Der konfigurierte Tagesenergiesensor muss weiterhin alle angezeigten Anlagen abdecken.
+Ein Anbieterwechsel kann diese fachliche Zuordnung verändern.
+Die Dokumentation erklärt diese Folge ausdrücklich.
+
+Layout, Kartenabmessungen und Bedienung bleiben unverändert.
+Die Karte zeigt weiterhin höchstens heute und vier Folgetage.
+Alle neuen Texte liegen auf Englisch und Deutsch vor.
+
+### 14.6 Fehlerzustände
+
+Folgende neue Zustände erhalten lokalisierte Meldungen:
+
+| Zustand                                 | Verhalten                               |
+| --------------------------------------- | --------------------------------------- |
+| Ungültiger `forecast_provider`          | Konfigurationsfehler nach drei Minuten  |
+| Explizit gewählter Anbieter fehlt       | Konfigurationsfehler nach drei Minuten  |
+| Mehrere aktivierte Solcast-Einträge     | Mehrdeutigkeitsfehler nach drei Minuten |
+| `estimate_mode` fehlt oder ist ungültig | Prognosemodusfehler nach drei Minuten   |
+| Solcast-Antwortschema ist falsch        | Sofortiger Schemafehler                 |
+| Solcast-Aktion fällt vorübergehend aus  | Datenfehler nach drei Minuten           |
+
+Mehrere Solcast-Einträge bleiben ein defensiver Fehlerfall.
+Die Solcast-Aktion besitzt keinen Parameter für einen Konfigurationseintrag.
+Die Karte darf deshalb keinen Eintrag erraten.
+
+Ohne gültigen Prognosemodus verarbeitet die Karte keine Solcast-Aktionszeitreihe.
+Die Karte errät niemals `pv_estimate` als Ersatzmodus.
+Anbieterprojizierte Energiedaten bleiben als begrenzter Rückfall erlaubt.
+Aktivierte Gesamtsensoren bleiben ebenfalls als begrenzter Rückfall erlaubt.
+
+Normale Dashboardrechte für die Solcast-Aktion sind noch nicht real geprüft.
+Die Dokumentation behauptet keine Prüfung mit einer echten Home-Assistant-Instanz.
+Kontrollierte API-Fixtures bleiben die verbindliche Prüfung.
+
+### 14.7 Umsetzungspakete
+
+Die Umsetzung folgt diesen abgegrenzten Paketen:
+
+1. Produktvertrag und Typen ergänzen.
+   `forecast_provider`, Anbieterkennungen und Fehlerzustände werden festgelegt.
+2. Anbieterwahl und Erkennung trennen.
+   Forecast.Solar und Solcast erhalten getrennte Erkennungswege.
+3. Den Forecast.Solar-Datenfluss in einen Adapter verschieben.
+   Sein bestehendes Verhalten bleibt unverändert.
+4. Den Solcast-Adapter implementieren.
+   Er normalisiert Aktion, Sensoren und Energie-Rückfall.
+5. Zwischenspeicher und Kartenlebenszyklus erweitern.
+   Anbieter und Solcast-Modus trennen alle Zustände.
+6. Editor und Lokalisierung ergänzen.
+   Automatisch, Forecast.Solar und Solcast werden auswählbar.
+7. Kontrollierte Fixtures und Regressionstests ergänzen.
+   Beide Anbieter erhalten vollständige Vertragsfälle.
+8. README und Datendokumentation aktualisieren.
+   Auswahl, Priorität, Grenzen und Datenschutz werden erklärt.
+
+Der Architekt prüft den Vertrag erneut vor Quellcodeänderungen.
+Entwickler bearbeiten getrennte, klar begrenzte Dateibereiche.
+Automatisierte Prüfungen laufen nur direkt vor einem freigegebenen Release.
+
+### 14.8 Geplante Abnahmetests
+
+- Bestehende Konfigurationen mit Forecast.Solar wählen weiterhin Forecast.Solar.
+- Eine reine Solcast-Installation funktioniert ohne Kartenkonfiguration.
+- Beide Anbieter im Automatikmodus wählen Forecast.Solar.
+- Ein deaktivierter Forecast.Solar-Eintrag blockiert Solcast nicht.
+- Ein aktivierter, ungeladener Forecast.Solar-Eintrag behält Vorrang.
+- Explizites Solcast verwendet niemals Forecast.Solar.
+- Explizites Forecast.Solar verwendet niemals Solcast.
+- Beide Anbieter werden niemals addiert.
+- Mehrere Forecast.Solar-Einträge werden weiterhin einmal summiert.
+- Mehrere Solcast-Standorte werden nur als Gesamtsumme gezählt.
+- Umbenannte Solcast-Entitäten bleiben über `unique_id` erkennbar.
+- Alle drei Solcast-Prognosemodi verwenden das passende Antwortfeld.
+- Zwei 30-Minuten-Werte werden korrekt in kWh umgerechnet.
+- Sommerzeit-Tage mit 46, 48 und 50 Intervallen bleiben vollständig.
+- Ungültige Zeitstempel und Energiewerte bleiben sichtbar unvollständig.
+- Ein falsches Antwortschema erzeugt sofort eine Warnung.
+- Ein fehlender Aktionsdienst nutzt nur erlaubte Rückfälle.
+- Eine fehlende Energie-Dashboard-Zuordnung verhindert nicht die primäre Solcast-Aktion.
+- Zwei Karten mit verschiedenen Anbietern teilen keine Daten.
+- Ein Wechsel des Solcast-Modus verwirft dessen alten Zwischenspeicher.
+- Ein Anbieterwechsel verwirft Antworten und Warnfristen der vorherigen Auswahl.
+- Die Karte ruft keine Solcast-Aktualisierungsaktion auf.
+- Die Karte ruft `solcast_solar.get_options` niemals auf.
+- Editor und YAML bewahren unbekannte Konfigurationsfelder.
+- Automatisch entfernt `forecast_provider` aus der Editor-Konfiguration.
+- Englische und deutsche Übersetzungen bleiben vollständig.
+- Bestehende Forecast.Solar-Regressionsfälle bleiben unverändert erfolgreich.
+- Eine gescheiterte Forecast.Solar-Erkennung wählt Solcast niemals still aus.
+- Ein explizit fehlender Anbieter warnt nach drei Minuten.
+- Ein ungültiger `forecast_provider` warnt nach drei Minuten.
+- Mehrere Solcast-Einträge führen niemals zu einer geratenen Auswahl.
+- Ein fehlender Prognosemodus verwendet keinen geratenen Modus.
+- Schemafehler verhindern sämtliche Rückfälle.
+- Der Energie-Rückfall akzeptiert nur den gewählten Solcast-Eintrag.
+- Deaktivierte Solcast-Tagessensoren bleiben ausgeschlossen.
+- Vorübergehende Solcast-Fehler behalten nur Solcast-Daten als veraltet.
+- Gleiche laufende Solcast-Anfragen werden zusammengeführt.
+
+### 14.9 Dokumentation und Kompatibilität
+
+Die README erhält Beispiele für Automatik und explizite Auswahl.
+Sie erklärt den festen Vorrang von Forecast.Solar.
+Sie erklärt den fehlenden Laufzeitwechsel bei Fehlern.
+
+Die Dokumentation nennt `BJReplay/ha-solcast-solar` als unterstützte Integration.
+Sie nennt Version `4.6.1` als ersten geprüften Vertrag.
+Ältere Versionen gelten nur bei gleichem technischen Vertrag als kompatibel.
+
+Die Dokumentation erklärt die kombinierte Solcast-Gesamtsumme.
+Sie erklärt Solcast-Ausschlüsse als Aufgabe der Integration.
+Sie verlangt keinen zusätzlichen API-Schlüssel für die Karte.
+
+Eine spätere Forecast.Solar-Installation ändert die automatische Auswahl.
+Forecast.Solar erhält dann beim nächsten Erkennen Vorrang.
+Eine explizite Auswahl verhindert diesen Wechsel.
+
+Diese Erweiterung benötigt keine persistente Datenmigration.
+Sie benötigt keine Änderung an Home Assistant oder Solcast.
+Eine Veröffentlichung erfolgt nur nach einer gesonderten Releasefreigabe.

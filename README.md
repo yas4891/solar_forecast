@@ -67,6 +67,19 @@ The sensor must measure the total energy from all displayed solar systems.
 The sensor must use Wh, kWh, or MWh.
 Do not use a power sensor with W or kW.
 
+Set both energy sensors to compare yesterday's production with the forecast that applied at 19:00 two days earlier:
+
+```yaml
+type: custom:solar-forecast-card
+production_today_entity: sensor.solar_energy_today
+history_forecast_entity: sensor.solar_forecast_tomorrow
+```
+
+`history_forecast_entity` must report the complete next-day energy forecast.
+The card reads both values from Home Assistant history.
+The comparison appears only when both historical values are valid.
+Home Assistant Recorder must keep the required history.
+
 Set `language` to select a card language:
 
 ```yaml
@@ -85,17 +98,21 @@ See [translations](docs/translations.md) to add a language.
 
 ## Card display
 
-The card displays five days at most.
+Without the comparison, the card displays five forecast days at most.
 The display period contains today and four future days at most.
+With a complete yesterday comparison, the card displays six columns at most.
 The card keeps a fixed card size when the day count changes.
 Use the Home Assistant layout editor to set the card height.
 The card uses eight grid rows by default.
 The layout editor allows at least four grid rows.
 
 The highest complete daily value sets the bar scale.
+The historical production and forecast values also set the scale when the comparison appears.
 Future-day bars use a yellow-to-orange gradient.
 Today uses orange for produced energy.
 Today uses yellow for remaining forecast energy.
+Yesterday uses an orange-yellow bar for produced energy.
+A black horizontal line marks the forecast that applied at 19:00.
 
 Without a production sensor, the card displays only today's remaining forecast.
 

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.3.0 - 2026-09-18
+
+- Compare yesterday's generated energy with the forecast at 19:00.
+- Configure the comparison with a daily production sensor and a next-day forecast sensor.
+- Show yesterday's generated energy and forecast in one accessible bar.
+- Scale forecast and generated energy values together.
+- Keep the comparison safe across time changes and local day changes.
+- See a simpler card header with the period total and daily average below the title.
+
 ## 0.2.0 - 2026-09-09
 
 - Set the card height with the Home Assistant layout editor.

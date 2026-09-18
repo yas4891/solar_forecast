@@ -1,6 +1,8 @@
 import { LitElement, css, html, nothing, type PropertyValues } from "lit";
 import { localize, resolveLocale } from "./localize";
 import { loadForecastData } from "./data/forecast";
+import { loadHistoryData } from "./data/history";
+import { dateKeyAt, dateKeyOffset } from "./model/dates";
 import { buildViewModel } from "./model/view-model";
 import { WarningTracker } from "./model/warnings";
 import "./editor";
@@ -11,6 +13,8 @@ import type {
   DataIssue,
   ForecastPayload,
   HassLike,
+  HistoricalComparison,
+  HistoryPayload,
 } from "./types";
 
 const REFRESH_MS = 5 * 60 * 1000;
@@ -42,6 +46,8 @@ export class SolarForecastCard extends LitElement {
   private watchedSignature?: string;
   private activeWarningSignature = "";
   private immediateIssues: DataIssue[] = [];
+  private historyPayload?: HistoryPayload;
+  private historyPayloadKey?: string;
   private readonly warningTracker = new WarningTracker();
 
   public setConfig(config: CardConfig): void {
@@ -55,6 +61,8 @@ export class SolarForecastCard extends LitElement {
     this.warningTracker.reset();
     this.activeWarningSignature = "";
     this.immediateIssues = [];
+    this.historyPayload = undefined;
+    this.historyPayloadKey = undefined;
     this.warningVisible = false;
     this.requestGeneration += 1;
     this.refresh();
@@ -141,12 +149,43 @@ export class SolarForecastCard extends LitElement {
     const hass = this.hass;
     if (!hass || !this.isConnected) return;
     const generation = ++this.requestGeneration;
+    const refreshNow = Date.now();
+    const historyKey = this.historyKey(hass, refreshNow);
+    if (historyKey !== this.historyPayloadKey) {
+      this.historyPayload = undefined;
+      this.historyPayloadKey = historyKey;
+    }
+    const historyPromise = loadHistoryData(hass, this.config, refreshNow);
     try {
       const payload = await loadForecastData(hass);
       if (generation !== this.requestGeneration || hass !== this.hass) return;
-      this.model = buildViewModel(hass, this.config, payload, new Date());
+      this.model = buildViewModel(
+        hass,
+        this.config,
+        payload,
+        new Date(refreshNow),
+        this.historyPayload,
+      );
       this.watchEntities(hass, payload);
       this.syncWarningDelay();
+      void historyPromise
+        .then((history) => {
+          if (generation !== this.requestGeneration || hass !== this.hass) return;
+          if (
+            historyKey !== this.historyPayloadKey ||
+            historyKey !== this.historyKey(hass, Date.now())
+          ) {
+            void this.refresh();
+            return;
+          }
+          this.historyPayload = history;
+          this.model = buildViewModel(hass, this.config, payload, new Date(refreshNow), history);
+          this.watchEntities(hass, payload);
+          this.syncWarningDelay();
+        })
+        .catch(() => {
+          // History is optional. The current forecast stays visible if it fails unexpectedly.
+        });
     } catch {
       if (generation !== this.requestGeneration || hass !== this.hass) return;
       this.model = undefined;
@@ -154,6 +193,17 @@ export class SolarForecastCard extends LitElement {
       this.watchedSignature = undefined;
       this.syncWarningDelay();
     }
+  }
+
+  /** Prevents yesterday's payload from surviving a local day or entity change. */
+  private historyKey(hass: HassLike, now: number): string {
+    const today = dateKeyAt(now, hass.config.time_zone);
+    return [
+      dateKeyOffset(today, -1),
+      hass.config.time_zone,
+      this.config.production_today_entity ?? "",
+      this.config.history_forecast_entity ?? "",
+    ].join("|");
   }
 
   private syncWarningDelay(): void {
@@ -188,7 +238,7 @@ export class SolarForecastCard extends LitElement {
     }).format(value);
   }
 
-  private formatDate(day: DailyForecast): string {
+  private formatDate(day: Pick<DailyForecast, "dateKey">): string {
     return new Intl.DateTimeFormat(this.language(), {
       day: "2-digit",
       month: "2-digit",
@@ -205,6 +255,10 @@ export class SolarForecastCard extends LitElement {
     return new Intl.DateTimeFormat(this.language(), { weekday: "short", timeZone: "UTC" }).format(
       new Date(`${day.dateKey}T12:00:00Z`),
     );
+  }
+
+  private historyWeekday(): string {
+    return this.text("yesterday");
   }
 
   private toggleTooltip(event: Event, id: string): void {
@@ -267,6 +321,10 @@ export class SolarForecastCard extends LitElement {
     return `${this.text("total")}: ${this.formatEnergy(day.totalKwh)} kWh${production}${percentage}\n${forecast}${missing}${omitted}${sources}${truncated}`;
   }
 
+  private historyTooltip(day: HistoricalComparison): string {
+    return `${this.text("produced")}: ${this.formatEnergy(day.actualKwh)} kWh\n${this.text("forecastAt19")}: ${this.formatEnergy(day.forecastKwh)} kWh`;
+  }
+
   private issueText(): VisibleIssue[] {
     const all = [...this.immediateIssues, ...this.warningTracker.active()];
     if (!this.model && all.length === 0) return [];
@@ -288,6 +346,7 @@ export class SolarForecastCard extends LitElement {
 
   private issueMessage(code: DataIssue["code"], key?: string): string {
     if (key === "config:language") return this.text("invalidLanguage");
+    if (key?.startsWith("history:configuration:")) return this.text("warningHistoryConfiguration");
     switch (code) {
       case "connection_unavailable":
       case "forecast_unavailable":
@@ -302,6 +361,11 @@ export class SolarForecastCard extends LitElement {
         return this.text("warningEnergy");
       case "production_invalid":
         return this.text("warningProduction");
+      case "history_unavailable":
+      case "history_invalid":
+        return this.text("warningHistory");
+      case "history_schema_invalid":
+        return this.text("warningHistorySchema");
       case "forecast_schema_invalid":
         return this.text("warningSchema");
       default:
@@ -357,6 +421,35 @@ export class SolarForecastCard extends LitElement {
         <span class="weekday">${this.weekday(day)}</span>
         <span class="date">${this.formatDate(day)}</span>
         ${this.renderTooltip(id, this.dayTooltip(day))}
+      </button>
+    </article>`;
+  }
+
+  private renderHistoryDay(day: HistoricalComparison) {
+    const max = this.model?.maxKwh ?? 0;
+    const actualHeight = max > 0 ? Math.min(100, ((day.actualKwh ?? 0) / max) * 100) : 0;
+    const forecastHeight = max > 0 ? Math.min(100, ((day.forecastKwh ?? 0) / max) * 100) : 0;
+    const id = `history-${day.dateKey}`;
+    return html`<article class="day is-history">
+      <button
+        class="day-button"
+        data-tooltip-trigger
+        aria-describedby="tooltip-${id}"
+        aria-label="${this.historyWeekday()}. ${this.historyTooltip(day)}"
+        @click=${(event: Event) => this.toggleTooltip(event, id)}
+        @focus=${() => this.openOnFocus(id)}
+        @blur=${() => this.closeOnLeave(id)}
+        @mouseenter=${() => this.openOnFocus(id)}
+        @mouseleave=${() => this.closeOnLeave(id)}
+      >
+        <strong>${this.formatEnergy(day.actualKwh)}</strong><span class="unit">kWh</span>
+        <span class="track" aria-hidden="true">
+          <span class="fill history-fill" style="height:${actualHeight}%"></span>
+          <span class="history-forecast" style="--forecast-line-position:${forecastHeight}%"></span>
+        </span>
+        <span class="weekday">${this.historyWeekday()}</span>
+        <span class="date">${this.formatDate(day)}</span>
+        ${this.renderTooltip(id, this.historyTooltip(day))}
       </button>
     </article>`;
   }
@@ -422,9 +515,15 @@ export class SolarForecastCard extends LitElement {
               : nothing}
           </div>
         </header>
-        <main class="chart" style=${`--day-count:${model?.days?.length || 1}`}>
-          ${model?.days?.length
-            ? model.days.map((day) => this.renderDay(day))
+        <main
+          class="chart"
+          style=${`--day-count:${(model?.historyDays.length ?? 0) + (model?.days?.length ?? 0) || 1}`}
+        >
+          ${model && (model.historyDays.length || model.days.length)
+            ? [
+                ...model.historyDays.map((day) => this.renderHistoryDay(day)),
+                ...model.days.map((day) => this.renderDay(day)),
+              ]
             : html`<p class="empty">${this.text("noForecast")}</p>`}
         </main>
       </section>
@@ -624,6 +723,26 @@ export class SolarForecastCard extends LitElement {
     .today-fill {
       background: var(--forecast-yellow);
       box-shadow: 0 0 15px color-mix(in srgb, var(--forecast-yellow) 50%, transparent);
+    }
+    .history-fill {
+      background: linear-gradient(to top, var(--forecast-orange), var(--forecast-yellow));
+      box-shadow: 0 0 15px color-mix(in srgb, var(--forecast-yellow) 50%, transparent);
+    }
+    .history-forecast {
+      --history-line-height: 4px;
+      position: absolute;
+      z-index: 1;
+      left: 2px;
+      right: 2px;
+      bottom: clamp(
+        0px,
+        calc(var(--forecast-line-position) - (var(--history-line-height) / 2)),
+        calc(100% - var(--history-line-height))
+      );
+      height: var(--history-line-height);
+      background: #000;
+      border: 1px solid color-mix(in srgb, #fff 75%, transparent);
+      box-sizing: border-box;
     }
     .produced {
       background: var(--forecast-orange);

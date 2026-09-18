@@ -7,6 +7,7 @@ import { SolarForecastCard } from "../src/solar-forecast-card";
 import type { CardViewModel } from "../src/types";
 
 const model: CardViewModel = {
+  historyDays: [],
   days: [
     {
       dateKey: "2026-09-07",
@@ -53,6 +54,61 @@ describe("SolarForecastCard", () => {
     card.remove();
   });
 
+  it("renders a complete yesterday comparison before today", async () => {
+    const card = new SolarForecastCard();
+    card.hass = { states: {}, config: { time_zone: "Europe/Berlin" } };
+    card.setConfig({ type: "custom:solar-forecast-card", language: "en" });
+    document.body.append(card);
+    (card as unknown as { model: CardViewModel }).model = {
+      ...model,
+      maxKwh: 30,
+      historyDays: [
+        {
+          dateKey: "2026-09-06",
+          actualKwh: 18,
+          forecastKwh: 30,
+          forecastAt: Date.parse("2026-09-05T17:00:00Z"),
+          complete: true,
+        },
+      ],
+    };
+    await card.updateComplete;
+    const days = card.shadowRoot?.querySelectorAll(".day");
+    expect(days).toHaveLength(3);
+    expect(days?.[0].classList).toContain("is-history");
+    expect(days?.[0].querySelector(".history-forecast")).not.toBeNull();
+    expect(days?.[0].querySelector("button")?.getAttribute("aria-label")).toContain(
+      "Forecast at 19:00: 30.0 kWh",
+    );
+    card.remove();
+  });
+
+  it("clamps historical forecast lines at zero, half, and full scale", async () => {
+    const card = new SolarForecastCard();
+    card.hass = { states: {}, config: { time_zone: "Europe/Berlin" } };
+    card.setConfig({ type: "custom:solar-forecast-card", language: "en" });
+    document.body.append(card);
+    (card as unknown as { model: CardViewModel }).model = {
+      ...model,
+      maxKwh: 20,
+      historyDays: [0, 10, 20].map((forecastKwh, index) => ({
+        dateKey: `2026-09-0${4 + index}`,
+        actualKwh: 10,
+        forecastKwh,
+        forecastAt: 0,
+        complete: true,
+      })),
+    };
+    await card.updateComplete;
+    const lines = card.shadowRoot?.querySelectorAll<HTMLElement>(".history-forecast");
+    const linePositions = (lines ? [...lines] : []).map((line) =>
+      line.style.getPropertyValue("--forecast-line-position"),
+    );
+    expect(lines).toHaveLength(3);
+    expect(linePositions).toEqual(["0%", "50%", "100%"]);
+    card.remove();
+  });
+
   it("uses Home Assistant grid layout options and rejects another card type", () => {
     const card = new SolarForecastCard();
     expect(card.getCardSize()).toBe(8);
@@ -81,7 +137,9 @@ describe("SolarForecastCard", () => {
     const header = card.shadowRoot?.querySelector("header");
     const summary = header?.querySelector(".summary-wrap");
     expect(header?.querySelector("ha-icon[icon='mdi:solar-power']")).not.toBeNull();
-    expect(header?.querySelector("h1")?.textContent).toBe("Solar forecast with a long custom title");
+    expect(header?.querySelector("h1")?.textContent).toBe(
+      "Solar forecast with a long custom title",
+    );
     expect(summary?.querySelector(".period-summary")?.textContent).toContain("PERIOD");
     expect(summary?.querySelector(".remaining")).toBeNull();
     expect(summary?.querySelector("p")).toBeNull();

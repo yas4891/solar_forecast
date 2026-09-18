@@ -21,6 +21,7 @@ const schemaIssue = {
 
 function model(issues: DataIssue[]): CardViewModel {
   return {
+    historyDays: [],
     days: [],
     remainingKwh: null,
     periodKwh: null,

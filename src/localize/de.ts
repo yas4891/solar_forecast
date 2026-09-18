@@ -7,9 +7,11 @@ export const de: Dictionary = {
   average: "Ø",
   perDay: "/Tag",
   today: "Heute",
+  yesterday: "Gestern",
   tomorrow: "Morgen",
   produced: "Erzeugt",
   forecast: "Prognose",
+  forecastAt19: "Prognose um 19:00",
   total: "Gesamt",
   productionNotConfigured:
     "Es wird nur die Restprognose angezeigt, weil kein Erzeugungssensor eingerichtet ist.",
@@ -33,6 +35,9 @@ export const de: Dictionary = {
   languageAuto: "Automatisch (Home Assistant)",
   productionTodayEntity: "Heutiger Erzeugungssensor",
   productionTodayHelp: "Optionaler Energiesensor für die gesamte heutige Erzeugung.",
+  historyForecastEntity: "Historischer Prognosesensor",
+  historyForecastHelp:
+    "Setze diese Tagesprognose für den Folgetag mit dem heutigen Erzeugungssensor für den gestrigen Vergleich.",
   invalidLanguage: "Die gewählte Sprache ist nicht verfügbar. Englisch wird verwendet.",
   warningConnection: "Home Assistant ist nicht verbunden.",
   warningSources: "Forecast.Solar-Quellen können nicht erkannt werden.",
@@ -40,6 +45,10 @@ export const de: Dictionary = {
   warningIncomplete: "Prognosedaten sind unvollständig.",
   warningEnergy: "Ein Prognoseenergiewert ist ungültig.",
   warningProduction: "Der eingerichtete Erzeugungssensor ist ungültig.",
+  warningHistory: "Der historische Erzeugungs- oder Prognosewert fehlt oder ist ungültig.",
+  warningHistoryConfiguration:
+    "Setze den heutigen Erzeugungssensor für den historischen Prognosesensor.",
+  warningHistorySchema: "Die Home-Assistant-Historienantwort ist nicht kompatibel.",
   warningSchema:
     "Die Prognoseantwort ist nicht kompatibel. Prüfe die Kartenkompatibilität mit Home Assistant.",
 };

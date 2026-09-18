@@ -3,7 +3,7 @@
 Solar Forecast Card is a Home Assistant custom card.
 Its card type is `custom:solar-forecast-card`.
 The local build creates `dist/solar_forecast.js`.
-The current release is `v0.2.0`.
+The current release is `v0.3.0`.
 
 The implementation uses TypeScript, Lit, and Vite.
 It keeps the card, data access, calculations, and locales separate.
@@ -43,3 +43,8 @@ Automated checks use controlled Home Assistant API fixtures for this interface.
 The project does not start, test, or change a Home Assistant instance.
 The checks do not call the Forecast.Solar network service.
 The card keeps a legacy fallback for older Home Assistant versions.
+
+An optional historical comparison uses `history/history_during_period`.
+It reads the forecast effective at local 19:00 and production before local midnight.
+Local date functions resolve time changes and skipped dates without fixed UTC offsets.
+The historical data cache expires at the next local day start.

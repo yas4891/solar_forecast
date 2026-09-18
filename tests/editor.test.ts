@@ -3,7 +3,7 @@ import { SolarForecastCardEditor } from "../src/editor";
 import type { CardConfig } from "../src/types";
 
 describe("SolarForecastCardEditor", () => {
-  it("shows only title, language, and daily production configuration", async () => {
+  it("shows title, language, and the two optional energy entities", async () => {
     const editor = new SolarForecastCardEditor();
     editor.setConfig({ type: "custom:solar-forecast-card", language: "en" });
     document.body.append(editor);
@@ -11,7 +11,7 @@ describe("SolarForecastCardEditor", () => {
 
     expect(editor.shadowRoot?.querySelectorAll("ha-textfield")).toHaveLength(1);
     expect(editor.shadowRoot?.querySelectorAll("ha-select")).toHaveLength(1);
-    expect(editor.shadowRoot?.querySelectorAll("ha-entity-picker")).toHaveLength(1);
+    expect(editor.shadowRoot?.querySelectorAll("ha-entity-picker")).toHaveLength(2);
     expect(editor.shadowRoot?.querySelector("[name='height'], #height, .height")).toBeNull();
     expect(editor.shadowRoot?.textContent?.toLowerCase()).not.toContain("height");
     editor.remove();
@@ -42,6 +42,12 @@ describe("SolarForecastCardEditor", () => {
     const entity = editor.shadowRoot?.querySelector("ha-entity-picker") as HTMLElement;
     entity.dispatchEvent(new CustomEvent("value-changed", { detail: { value: "" } }));
     expect(changes.at(-1)?.production_today_entity).toBeUndefined();
+
+    const historyEntity = editor.shadowRoot?.querySelectorAll("ha-entity-picker")[1] as HTMLElement;
+    historyEntity.dispatchEvent(
+      new CustomEvent("value-changed", { detail: { value: "sensor.forecast_tomorrow" } }),
+    );
+    expect(changes.at(-1)?.history_forecast_entity).toBe("sensor.forecast_tomorrow");
 
     editor.setConfig({ type: "custom:solar-forecast-card", name: "Solar roof", language: "en" });
     await editor.updateComplete;

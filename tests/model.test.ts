@@ -100,6 +100,65 @@ describe("buildViewModel", () => {
     expect(model.maxKwh).toBe(0);
   });
 
+  it("uses complete historical values in the scale but not the forward period", () => {
+    const model = buildViewModel(
+      hass({ "sensor.rest": { state: "8", attributes: { unit_of_measurement: "kWh" } } }),
+      { type: "custom:solar-forecast-card" },
+      payload(),
+      now,
+      {
+        comparisons: [
+          {
+            dateKey: "2026-09-07",
+            actualKwh: 12,
+            forecastKwh: 30,
+            forecastAt: Date.parse("2026-09-06T17:00:00Z"),
+            complete: true,
+          },
+        ],
+        issues: [],
+        fetchedAt: now,
+      },
+    );
+    expect(model.historyDays).toHaveLength(1);
+    expect(model.periodKwh).toBe(8);
+    expect(model.maxKwh).toBe(30);
+  });
+
+  it("keeps the same historical warning across forecast model refreshes", () => {
+    const history = {
+      comparisons: [],
+      issues: [
+        {
+          key: "history:unavailable:2026-09-07:sensor.production:sensor.forecast",
+          code: "history_unavailable" as const,
+          entityId: "sensor.forecast",
+        },
+      ],
+      fetchedAt: now,
+    };
+    const state = hass({
+      "sensor.rest": { state: "8", attributes: { unit_of_measurement: "kWh" } },
+    });
+    const first = buildViewModel(
+      state,
+      { type: "custom:solar-forecast-card" },
+      payload(),
+      now,
+      history,
+    );
+    const second = buildViewModel(
+      state,
+      { type: "custom:solar-forecast-card" },
+      payload(),
+      now + 60_000,
+      history,
+    );
+    expect(second.issues.find((issue) => issue.code === "history_unavailable")?.key).toBe(
+      first.issues.find((issue) => issue.code === "history_unavailable")?.key,
+    );
+  });
+
   it("clears a remaining-sensor error from an unchanged cached payload", () => {
     const state = hass({
       "sensor.rest": { state: "unknown", attributes: { unit_of_measurement: "kWh" } },

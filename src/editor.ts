@@ -39,6 +39,10 @@ export class SolarForecastCardEditor extends LitElement {
     const value = event.detail?.value ?? (event.target as HTMLInputElement).value;
     this.emit({ ...this.config, production_today_entity: value || undefined });
   }
+  private onHistoryEntity(event: CustomEvent): void {
+    const value = event.detail?.value ?? (event.target as HTMLInputElement).value;
+    this.emit({ ...this.config, history_forecast_entity: value || undefined });
+  }
   protected render() {
     const languages = supportedLocales();
     return html`<div class="editor">
@@ -67,6 +71,15 @@ export class SolarForecastCardEditor extends LitElement {
         @value-changed=${this.onEntity}
       ></ha-entity-picker>
       <p>${this.t("productionTodayHelp")}</p>
+      <ha-entity-picker
+        .hass=${this.hass}
+        .value=${this.config.history_forecast_entity || ""}
+        .label=${this.t("historyForecastEntity")}
+        .includeDomains=${["sensor"]}
+        .includeDeviceClasses=${["energy"]}
+        @value-changed=${this.onHistoryEntity}
+      ></ha-entity-picker>
+      <p>${this.t("historyForecastHelp")}</p>
     </div>`;
   }
   static styles = css`

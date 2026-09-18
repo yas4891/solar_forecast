@@ -1,7 +1,14 @@
 import { dateKeysFrom } from "./dates";
 import { energyKwh, isCurrentLocalDay } from "./energy";
 import { seriesCoverage } from "../data/forecast";
-import type { CardConfig, CardViewModel, DailyForecast, ForecastPayload, HassLike } from "../types";
+import type {
+  CardConfig,
+  CardViewModel,
+  DailyForecast,
+  ForecastPayload,
+  HassLike,
+  HistoryPayload,
+} from "../types";
 
 /**
  * Share of a series' best-covered day that a day must reach to count as a full day.
@@ -15,8 +22,9 @@ export function buildViewModel(
   config: CardConfig,
   payload: ForecastPayload,
   now: number | Date = Date.now(),
+  historyPayload: HistoryPayload = { comparisons: [], issues: [], fetchedAt: 0 },
 ): CardViewModel {
-  const issues = [...payload.issues];
+  const issues = [...payload.issues, ...historyPayload.issues];
   const keys = dateKeysFrom(now, hass.config.time_zone, 5);
   const [today, ...futureKeys] = keys;
   const productionEntity = config.production_today_entity
@@ -157,11 +165,18 @@ export function buildViewModel(
       ? null
       : completeDays.reduce((sum, day) => sum + (day.totalKwh ?? 0), 0);
   const averageKwh = periodKwh === null ? null : periodKwh / completeDays.length;
-  const maximum = completeDays.reduce<number | null>(
-    (max, day) => Math.max(max ?? 0, day.totalKwh ?? 0),
+  const scaleValues = [
+    ...completeDays.map((day) => day.totalKwh ?? 0),
+    ...historyPayload.comparisons
+      .filter((day) => day.complete)
+      .flatMap((day) => [day.actualKwh ?? 0, day.forecastKwh ?? 0]),
+  ];
+  const maximum = scaleValues.reduce<number | null>(
+    (max, value) => Math.max(max ?? 0, value),
     null,
   );
   return {
+    historyDays: historyPayload.comparisons.filter((day) => day.complete),
     days,
     remainingKwh: todayForecast ?? null,
     periodKwh,

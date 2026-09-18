@@ -7,9 +7,11 @@ export const en: Dictionary = {
   average: "AVG",
   perDay: "/day",
   today: "Today",
+  yesterday: "Yesterday",
   tomorrow: "Tomorrow",
   produced: "Produced",
   forecast: "Forecast",
+  forecastAt19: "Forecast at 19:00",
   total: "Total",
   productionNotConfigured:
     "Only the remaining forecast is shown because no production sensor is configured.",
@@ -31,6 +33,9 @@ export const en: Dictionary = {
   languageAuto: "Automatic (Home Assistant)",
   productionTodayEntity: "Today's production sensor",
   productionTodayHelp: "Optional energy sensor for the total production today.",
+  historyForecastEntity: "Historical forecast sensor",
+  historyForecastHelp:
+    "Set this next-day energy forecast with today's production sensor to compare yesterday.",
   invalidLanguage: "The selected language is not available. English is used.",
   warningConnection: "Home Assistant is not connected.",
   warningSources: "Forecast.Solar sources cannot be discovered.",
@@ -38,6 +43,10 @@ export const en: Dictionary = {
   warningIncomplete: "Forecast data is incomplete.",
   warningEnergy: "A forecast energy value is invalid.",
   warningProduction: "The configured production sensor is invalid.",
+  warningHistory: "The historical production or forecast value is unavailable or invalid.",
+  warningHistoryConfiguration:
+    "Set today's production sensor to use the historical forecast sensor.",
+  warningHistorySchema: "The Home Assistant history response is incompatible.",
   warningSchema:
     "The forecast response is incompatible. Check card compatibility with Home Assistant.",
 };

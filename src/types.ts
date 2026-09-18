@@ -22,6 +22,8 @@ export interface CardConfig {
   name?: string;
   language?: string;
   production_today_entity?: string;
+  /** Tomorrow's forecast sensor, read as it was at 19:00 two days earlier. */
+  history_forecast_entity?: string;
 }
 
 export interface ForecastSource {
@@ -40,6 +42,9 @@ export interface DataIssue {
     | "forecast_incomplete"
     | "invalid_energy"
     | "production_invalid"
+    | "history_unavailable"
+    | "history_invalid"
+    | "history_schema_invalid"
     | "invalid_language";
   sourceId?: string;
   entityId?: string;
@@ -73,6 +78,23 @@ export interface ForecastPayload {
   stale?: boolean;
 }
 
+/** A complete comparison of a past calendar day. All energy values use kWh. */
+export interface HistoricalComparison {
+  dateKey: string;
+  actualKwh?: number;
+  forecastKwh?: number;
+  forecastAt: number;
+  actualAt?: number;
+  complete: boolean;
+}
+
+export interface HistoryPayload {
+  comparisons: HistoricalComparison[];
+  issues: DataIssue[];
+  fetchedAt: number;
+  stale?: boolean;
+}
+
 export interface DailyForecast {
   dateKey: string;
   forecastKwh?: number;
@@ -87,6 +109,8 @@ export interface DailyForecast {
 }
 
 export interface CardViewModel {
+  /** Past comparisons are separate from the forward forecast period. */
+  historyDays: HistoricalComparison[];
   days: DailyForecast[];
   remainingKwh: number | null;
   periodKwh: number | null;

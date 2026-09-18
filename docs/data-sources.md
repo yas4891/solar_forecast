@@ -27,6 +27,19 @@ It must not provide power, such as W or kW.
 Without this sensor, the card shows only today's remaining forecast.
 This is an expected configuration and does not show a warning.
 
+## Yesterday comparison
+
+Set `history_forecast_entity` with `production_today_entity` to enable the comparison.
+The forecast entity must report the full energy forecast for the next day.
+The production entity must reset each local day.
+Both entities must cover every displayed solar system.
+
+The card reads the forecast state effective at 19:00 two days earlier.
+It reads the last production state before the following local midnight.
+Home Assistant Recorder must retain these states.
+The card shows yesterday only when both values are valid energy values.
+It does not replace missing historical energy with zero.
+
 ## Future days
 
 Home Assistant 2026.9.1 provides the `forecast_solar.get_forecast` service.
