@@ -1,5 +1,24 @@
 # Release verification
 
+## v0.4.0 status
+
+Release `v0.4.0` is approved and verified locally.
+The release is not yet published.
+
+- `npm run format:check` PASS.
+- `npm run lint` PASS.
+- `npm run typecheck` PASS.
+- `npm test` PASS with 95 of 95 tests across 15 files.
+- `npm run build` PASS.
+- `git diff --check` PASS.
+
+The release asset is `dist/solar_forecast.js`.
+Its size is 83,965 bytes.
+Its gzip size is 22,346 bytes.
+Its SHA-256 is `e60512626a5b5e359509970920f2314c5c578bd76e4378d3991cf600795ed665`.
+
+No browser, Playwright, HACS, Home Assistant, or container check ran.
+
 ## v0.3.0 status
 
 Release `v0.3.0` is approved and verified locally.
@@ -17,7 +36,6 @@ Its gzip size is 19.71 kB.
 Its SHA-256 is `2b6618b7fbc62433a75e419dfd543c4cf3d8bae89aca4118d1e7dd91c0121332`.
 
 No browser, Playwright, HACS, Home Assistant, or container check ran.
-This document does not confirm a publication, commit, tag, or remote verification.
 
 ## v0.2.0 verification
 

@@ -477,12 +477,19 @@ Die Auslieferungsdatei lautet `dist/solar_forecast.js`.
 Sie hat 71.136 Bytes und eine gzip-Größe von 19,71 kB.
 Ihre SHA-256 lautet `2b6618b7fbc62433a75e419dfd543c4cf3d8bae89aca4118d1e7dd91c0121332`.
 Kein Browser, Playwright, HACS, Home Assistant oder Container lief.
-Es gibt noch keinen Veröffentlichungs-, Commit-, Tag- oder Remote-Nachweis.
 
-## 14. Geplante Solcast-Erweiterung
+## 13.2 Release-Status `v0.4.0`
+
+Der Benutzer hat Release `v0.4.0` freigegeben.
+Die lokale Releaseprüfung ist abgeschlossen.
+Formatprüfung, Linting, Typprüfung, Build und `git diff --check` bestanden.
+Alle 95 Tests in 15 Dateien bestanden.
+Die Veröffentlichung steht noch aus.
+
+## 14. Solcast-Erweiterung
 
 Dieser Abschnitt erweitert den bestehenden Produktvertrag.
-Er plant Solcast-Unterstützung ohne Implementierung oder Veröffentlichung.
+Er beschreibt die umgesetzte Solcast-Unterstützung.
 
 ### 14.1 Anbieterwahl
 
@@ -704,9 +711,9 @@ Normale Dashboardrechte für die Solcast-Aktion sind noch nicht real geprüft.
 Die Dokumentation behauptet keine Prüfung mit einer echten Home-Assistant-Instanz.
 Kontrollierte API-Fixtures bleiben die verbindliche Prüfung.
 
-### 14.7 Umsetzungspakete
+### 14.7 Umsetzungsumfang
 
-Die Umsetzung folgt diesen abgegrenzten Paketen:
+Die Umsetzung umfasst diese abgegrenzten Pakete:
 
 1. Produktvertrag und Typen ergänzen.
    `forecast_provider`, Anbieterkennungen und Fehlerzustände werden festgelegt.
@@ -729,7 +736,7 @@ Der Architekt prüft den Vertrag erneut vor Quellcodeänderungen.
 Entwickler bearbeiten getrennte, klar begrenzte Dateibereiche.
 Automatisierte Prüfungen laufen nur direkt vor einem freigegebenen Release.
 
-### 14.8 Geplante Abnahmetests
+### 14.8 Abnahmekriterien
 
 - Bestehende Konfigurationen mit Forecast.Solar wählen weiterhin Forecast.Solar.
 - Eine reine Solcast-Installation funktioniert ohne Kartenkonfiguration.

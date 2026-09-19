@@ -12,6 +12,7 @@ import type {
   DailyForecast,
   DataIssue,
   ForecastPayload,
+  ForecastProvider,
   HassLike,
   HistoricalComparison,
   HistoryPayload,
@@ -48,6 +49,7 @@ export class SolarForecastCard extends LitElement {
   private immediateIssues: DataIssue[] = [];
   private historyPayload?: HistoryPayload;
   private historyPayloadKey?: string;
+  private selectedProvider?: ForecastProvider;
   private readonly warningTracker = new WarningTracker();
 
   public setConfig(config: CardConfig): void {
@@ -63,6 +65,7 @@ export class SolarForecastCard extends LitElement {
     this.immediateIssues = [];
     this.historyPayload = undefined;
     this.historyPayloadKey = undefined;
+    this.selectedProvider = undefined;
     this.warningVisible = false;
     this.requestGeneration += 1;
     this.refresh();
@@ -127,6 +130,10 @@ export class SolarForecastCard extends LitElement {
     for (const source of payload.sources) {
       if (source.remainingEntityId) ids.add(source.remainingEntityId);
       if (source.tomorrowEntityId) ids.add(source.tomorrowEntityId);
+      if (source.estimateModeEntityId) ids.add(source.estimateModeEntityId);
+      for (const entityId of Object.values(source.dailyEntityIds ?? {})) {
+        if (entityId) ids.add(entityId);
+      }
     }
     this.watchedEntityIds = [...ids].sort();
     this.watchedSignature = this.stateSignature(hass);
@@ -157,8 +164,9 @@ export class SolarForecastCard extends LitElement {
     }
     const historyPromise = loadHistoryData(hass, this.config, refreshNow);
     try {
-      const payload = await loadForecastData(hass);
+      const payload = await loadForecastData(hass, this.config, refreshNow);
       if (generation !== this.requestGeneration || hass !== this.hass) return;
+      this.syncSelectedProvider(payload);
       this.model = buildViewModel(
         hass,
         this.config,
@@ -193,6 +201,20 @@ export class SolarForecastCard extends LitElement {
       this.watchedSignature = undefined;
       this.syncWarningDelay();
     }
+  }
+
+  private syncSelectedProvider(payload: ForecastPayload): void {
+    if (
+      !this.config.forecast_provider &&
+      this.selectedProvider !== undefined &&
+      payload.provider !== undefined &&
+      this.selectedProvider !== payload.provider
+    ) {
+      this.warningTracker.reset();
+      this.activeWarningSignature = "";
+      this.immediateIssues = [];
+    }
+    if (payload.provider !== undefined) this.selectedProvider = payload.provider;
   }
 
   /** Prevents yesterday's payload from surviving a local day or entity change. */
@@ -368,6 +390,14 @@ export class SolarForecastCard extends LitElement {
         return this.text("warningHistorySchema");
       case "forecast_schema_invalid":
         return this.text("warningSchema");
+      case "forecast_provider_invalid":
+        return this.text("warningProviderInvalid");
+      case "forecast_provider_unavailable":
+        return this.text("warningProviderUnavailable");
+      case "solcast_ambiguous":
+        return this.text("warningSolcastAmbiguous");
+      case "solcast_mode_invalid":
+        return this.text("warningSolcastMode");
       default:
         return this.text("incomplete");
     }
@@ -817,6 +847,6 @@ if (!window.customCards.some((card) => card.type === "solar-forecast-card")) {
   window.customCards.push({
     type: "solar-forecast-card",
     name: "Solar Forecast Card",
-    description: "Combined Forecast.Solar dashboard card",
+    description: "Combined Forecast.Solar and Solcast dashboard card",
   });
 }

@@ -39,8 +39,8 @@ describe("forecast source discovery", () => {
     };
     const result = await discoverForecastSources(hass);
     expect(result.sources).toEqual([
-      { entryId: "a", remainingEntityId: "sensor.rest" },
-      { entryId: "b" },
+      { entryId: "a", provider: "forecast_solar", remainingEntityId: "sensor.rest" },
+      { entryId: "b", provider: "forecast_solar" },
     ]);
   });
 });

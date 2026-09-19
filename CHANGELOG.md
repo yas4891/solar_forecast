@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.4.0 - 2026-09-19
+
+- Use Solcast PV Forecast as a forecast provider.
+- Select Forecast.Solar or Solcast explicitly, or select a provider automatically.
+- Prefer Forecast.Solar automatically when both providers are configured.
+- Keep the selected provider after a runtime error.
+- Use the configured Solcast forecast mode and combined forecasts for included sites.
+
 ## 0.3.0 - 2026-09-18
 
 - Compare yesterday's generated energy with the forecast at 19:00.

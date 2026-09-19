@@ -16,4 +16,12 @@ describe("localization", () => {
     expect(Object.keys(supportedLocales())).toEqual(expect.arrayContaining(["en", "de"]));
     expect(localize("remaining", "de")).toBe("REST");
   });
+
+  it("localizes provider choices and Solcast warnings", () => {
+    expect(localize("forecastProvider", "en")).toBe("Forecast provider");
+    expect(localize("forecastProviderSolcast", "de")).toBe("Solcast PV Forecast");
+    expect(localize("warningSolcastMode", "de")).toBe(
+      "Der Solcast-Prognosemodus fehlt oder ist ungültig.",
+    );
+  });
 });

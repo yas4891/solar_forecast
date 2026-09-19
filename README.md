@@ -6,7 +6,7 @@
 [![Validate](https://github.com/yas4891/solar_forecast/actions/workflows/manual-quality.yml/badge.svg)](https://github.com/yas4891/solar_forecast/actions/workflows/manual-quality.yml)
 
 Solar Forecast Card is a Home Assistant dashboard card.
-It displays combined Forecast.Solar energy forecasts.
+It displays combined solar energy forecasts from Forecast.Solar or Solcast.
 
 ## Installation
 
@@ -53,8 +53,23 @@ Use this configuration for the card:
 type: custom:solar-forecast-card
 ```
 
-The card finds all enabled Forecast.Solar entries automatically.
-You do not select forecast sources.
+The card finds enabled forecast sources automatically.
+You do not select individual forecast sources.
+
+Use `forecast_provider` to select a forecast provider explicitly:
+
+```yaml
+type: custom:solar-forecast-card
+forecast_provider: solcast_solar
+```
+
+Valid values are `forecast_solar` and `solcast_solar`.
+When `forecast_provider` is not set, the card selects a provider automatically.
+Automatic selection uses Forecast.Solar when both integrations are available.
+It uses Solcast when only Solcast is available.
+It shows the normal empty state when neither integration is available.
+An explicit selection uses only that provider.
+The card does not change providers after a runtime error.
 
 Set `production_today_entity` to show produced energy for today:
 
@@ -128,18 +143,28 @@ The card does not extend a forecast with calculated values.
 
 ## Forecast sources
 
-The card uses the Home Assistant Forecast.Solar integration.
-The card does not call the Forecast.Solar web service directly.
+The card uses existing Home Assistant forecast integrations.
+It supports Home Assistant Forecast.Solar and Solcast PV Forecast from `BJReplay/ha-solcast-solar`.
+The first supported Solcast contract is version `4.6.1`.
+Older versions work only when they provide the same technical contract.
+
+The card does not call a forecast web service directly.
 The card does not require an API key, location, or panel data.
+It never reads or stores a Solcast API key.
 
 The card detects each enabled Forecast.Solar entry automatically.
 The card counts each entry once.
 The card does not count planes already combined by an entry.
 
+Solcast combines included sites inside its integration.
+The card treats this combined site total as one source.
+It does not add Solcast site or diagnostic sensors.
+Configure excluded Solcast sites in the Solcast integration.
+
 Home Assistant 2026.9.1 provides `forecast_solar.get_forecast` in its source code.
 This service does not require Energy dashboard forecast mappings.
 Older Home Assistant versions can use a limited fallback.
-See [data sources](docs/data-sources.md) for source and fallback details.
+See [data sources](docs/data-sources.md) for provider, source, and fallback details.
 
 ## Warnings
 

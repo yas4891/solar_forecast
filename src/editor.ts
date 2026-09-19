@@ -35,6 +35,14 @@ export class SolarForecastCardEditor extends LitElement {
     const value = (event.target as HTMLSelectElement).value;
     this.emit({ ...this.config, language: value || undefined });
   }
+  private onForecastProvider(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.emit({
+      ...this.config,
+      forecast_provider:
+        value === "forecast_solar" || value === "solcast_solar" ? value : undefined,
+    });
+  }
   private onEntity(event: CustomEvent): void {
     const value = event.detail?.value ?? (event.target as HTMLInputElement).value;
     this.emit({ ...this.config, production_today_entity: value || undefined });
@@ -62,6 +70,17 @@ export class SolarForecastCardEditor extends LitElement {
           ([code, locale]) => html`<mwc-list-item value=${code}>${locale.name}</mwc-list-item>`,
         )}</ha-select
       >
+      <ha-select
+        .label=${this.t("forecastProvider")}
+        .value=${this.config.forecast_provider || ""}
+        @selected=${this.onForecastProvider}
+      >
+        <mwc-list-item value="">${this.t("forecastProviderAuto")}</mwc-list-item>
+        <mwc-list-item value="forecast_solar"
+          >${this.t("forecastProviderForecastSolar")}</mwc-list-item
+        >
+        <mwc-list-item value="solcast_solar">${this.t("forecastProviderSolcast")}</mwc-list-item>
+      </ha-select>
       <ha-entity-picker
         .hass=${this.hass}
         .value=${this.config.production_today_entity || ""}

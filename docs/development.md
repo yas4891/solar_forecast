@@ -4,7 +4,7 @@ Install the locked packages with `npm ci --ignore-scripts`.
 
 Run the local fixture with `npm run dev`.
 Open the local URL shown by Vite.
-The fixture has no connection to Home Assistant or Forecast.Solar.
+The fixture has no connection to Home Assistant, Forecast.Solar, or Solcast.
 
 The fixture has three fixed data scenarios.
 
@@ -12,11 +12,12 @@ The fixture has three fixed data scenarios.
 - **Five forecast days** shows today and four future days.
 - **No production sensor** leaves today's measured section empty.
 
-The fixture responds to these Home Assistant WebSocket calls:
+The local fixture only provides Forecast.Solar data.
+It responds to these Home Assistant WebSocket calls:
 
 - `config_entries/get` with the Forecast.Solar domain.
 - `config/entity_registry/list` for combined source sensors.
-- `call_service` for the Forecast.Solar forecast response.
+- `call_service` for Forecast.Solar forecast responses.
 - `energy/solar_forecast` with an empty compatibility response.
 
 Run automated unit and integration checks only directly before an approved release.

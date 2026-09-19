@@ -2,6 +2,12 @@ import type { HassEntity, HassLike } from "../../src/types";
 
 export type FixtureScenario = "two-days" | "five-days" | "no-production";
 
+export interface SolcastFixtureOptions {
+  entryId?: string;
+  mode?: "estimate" | "estimate10" | "estimate90";
+  data?: unknown;
+}
+
 interface FixtureSource {
   entryId: string;
   remainingKwh: number;
@@ -120,6 +126,81 @@ export function createFixtureHass(scenario: FixtureScenario): HassLike {
           context: { id: "fixture", parent_id: null, user_id: null },
           response: { watts: {}, wh_period: periodsFor(matching.hourlyWh, timeZone) },
         } as T;
+      }
+      if (message.type === "energy/solar_forecast") return {} as T;
+      throw new Error(`Unsupported fixture WebSocket command: ${String(message.type)}`);
+    },
+  };
+}
+
+/**
+ * A deterministic Solcast surface for card tests.
+ * The entity IDs are deliberately renamed to prove that discovery uses unique IDs.
+ */
+export function createSolcastFixtureHass(options: SolcastFixtureOptions = {}): HassLike {
+  const entryId = options.entryId ?? "solcast-roof";
+  const mode = options.mode ?? "estimate";
+  const data = options.data ?? [
+    {
+      period_start: "2026-09-08T10:00:00Z",
+      pv_estimate: 2,
+      pv_estimate10: 3,
+      pv_estimate90: 4,
+    },
+    {
+      period_start: "2026-09-08T10:30:00Z",
+      pv_estimate: 2,
+      pv_estimate10: 3,
+      pv_estimate90: 4,
+    },
+  ];
+  return {
+    connection: {},
+    config: { time_zone: "Europe/Berlin" },
+    states: {
+      "sensor.renamed_solcast_mode": { state: mode },
+      "sensor.renamed_solcast_remaining": {
+        state: "5",
+        attributes: { unit_of_measurement: "kWh", device_class: "energy" },
+      },
+      "sensor.renamed_solcast_tomorrow": {
+        state: "8",
+        attributes: { unit_of_measurement: "kWh", device_class: "energy" },
+      },
+    },
+    async callWS<T>(message: Record<string, unknown>): Promise<T> {
+      if (message.type === "config_entries/get" && message.domain === "forecast_solar") {
+        return [] as T;
+      }
+      if (message.type === "config_entries/get" && message.domain === "solcast_solar") {
+        return [
+          { entry_id: entryId, domain: "solcast_solar", state: "loaded", disabled_by: null },
+        ] as T;
+      }
+      if (message.type === "config/entity_registry/list") {
+        return [
+          {
+            entity_id: "sensor.renamed_solcast_remaining",
+            platform: "solcast_solar",
+            config_entry_id: entryId,
+            unique_id: "get_remaining_today",
+          },
+          {
+            entity_id: "sensor.renamed_solcast_tomorrow",
+            platform: "solcast_solar",
+            config_entry_id: entryId,
+            unique_id: "total_kwh_forecast_tomorrow",
+          },
+          {
+            entity_id: "sensor.renamed_solcast_mode",
+            platform: "solcast_solar",
+            config_entry_id: entryId,
+            unique_id: "estimate_mode",
+          },
+        ] as T;
+      }
+      if (message.type === "call_service") {
+        return { response: { data } } as T;
       }
       if (message.type === "energy/solar_forecast") return {} as T;
       throw new Error(`Unsupported fixture WebSocket command: ${String(message.type)}`);

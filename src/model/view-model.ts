@@ -5,6 +5,7 @@ import type {
   CardConfig,
   CardViewModel,
   DailyForecast,
+  ForecastProvider,
   ForecastPayload,
   HassLike,
   HistoryPayload,
@@ -15,6 +16,14 @@ import type {
  * Daylight length changes slowly, so a much shorter day is a truncated horizon day.
  */
 const COVERAGE_RATIO = 0.6;
+
+function sourceIssueKey(
+  provider: ForecastProvider | undefined,
+  kind: string,
+  sourceId: string,
+): string {
+  return provider ? `${provider}:${kind}:${sourceId}` : `${kind}:${sourceId}`;
+}
 
 /** Creates display data without mutating Home Assistant state or the cached payload. */
 export function buildViewModel(
@@ -50,30 +59,40 @@ export function buildViewModel(
 
   const days: DailyForecast[] = [];
   const todayParsed = payload.sources.map((source) => {
+    const remainingKey = sourceIssueKey(source.provider, "remaining", source.entryId);
     if (!source.remainingEntityId) {
       return {
         issue: {
-          key: `remaining:${source.entryId}`,
+          key: remainingKey,
           code: "forecast_incomplete" as const,
           sourceId: source.entryId,
+          provider: source.provider,
         },
       };
     }
     const entity = hass.states[source.remainingEntityId];
-    const parsed = energyKwh(entity, `remaining:${source.entryId}`, source.remainingEntityId);
+    const parsed = energyKwh(entity, remainingKey, source.remainingEntityId);
     if (parsed.value !== undefined && !isCurrentLocalDay(entity, today, hass.config.time_zone)) {
       return {
         issue: {
-          key: `remaining:${source.entryId}`,
+          key: remainingKey,
           code: "forecast_incomplete" as const,
           sourceId: source.entryId,
+          provider: source.provider,
         },
+      };
+    }
+    if (parsed.issue) {
+      parsed.issue = {
+        ...parsed.issue,
+        sourceId: source.entryId,
+        provider: source.provider,
       };
     }
     return parsed;
   });
   for (const parsed of todayParsed) {
-    if (parsed.issue) issues.push({ ...parsed.issue, sourceId: parsed.issue.sourceId });
+    if (parsed.issue) issues.push(parsed.issue);
   }
   const todayValues = todayParsed.map((item) => item.value);
   const todayComplete =
@@ -114,10 +133,24 @@ export function buildViewModel(
       );
       const cached = forecast?.dailyKwh.get(key);
       // The tomorrow sensor is a live fallback while the five-minute time-series cache refreshes.
-      if (cached === undefined && key === futureKeys[0] && source.tomorrowEntityId) {
-        const entity = hass.states[source.tomorrowEntityId];
-        const parsed = energyKwh(entity, `tomorrow:${source.entryId}`, source.tomorrowEntityId);
-        if (parsed.issue) issues.push({ ...parsed.issue, sourceId: source.entryId });
+      const dayOffset = futureKeys.indexOf(key) + 1;
+      const fallbackEntityId =
+        source.dailyEntityIds?.[dayOffset] ??
+        (dayOffset === 1 ? source.tomorrowEntityId : undefined);
+      if (cached === undefined && fallbackEntityId && !forecast?.schemaInvalid) {
+        const entity = hass.states[fallbackEntityId];
+        const parsed = energyKwh(
+          entity,
+          sourceIssueKey(source.provider, `forecast:${dayOffset}`, source.entryId),
+          fallbackEntityId,
+        );
+        if (parsed.issue) {
+          issues.push({
+            ...parsed.issue,
+            sourceId: source.entryId,
+            provider: source.provider,
+          });
+        }
         return parsed.value !== undefined && isCurrentLocalDay(entity, today, hass.config.time_zone)
           ? parsed.value
           : undefined;
@@ -159,7 +192,9 @@ export function buildViewModel(
   const periodComplete =
     days.every((day) => day.complete) &&
     payload.stale !== true &&
-    !issues.some((issue) => issue.key.startsWith("series:"));
+    !issues.some(
+      (issue) => issue.code === "forecast_incomplete" && /(?:^|:)series:/.test(issue.key),
+    );
   const periodKwh =
     completeDays.length === 0
       ? null

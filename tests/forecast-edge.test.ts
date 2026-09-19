@@ -175,8 +175,11 @@ describe("Forecast.Solar data boundaries", () => {
     const stale = await loadForecastData(hass, now + 300_001);
     const repeated = await loadForecastData(hass, now + 300_002);
 
-    expect(fresh.sources).toEqual([{ entryId: "east" }]);
-    expect(stale).toMatchObject({ stale: true, sources: [{ entryId: "east" }] });
+    expect(fresh.sources).toEqual([{ entryId: "east", provider: "forecast_solar" }]);
+    expect(stale).toMatchObject({
+      stale: true,
+      sources: [{ entryId: "east", provider: "forecast_solar" }],
+    });
     expect(stale.issues).toContainEqual(
       expect.objectContaining({ code: "source_discovery_failed" }),
     );
@@ -227,6 +230,7 @@ describe("Forecast.Solar data boundaries", () => {
     expect(result.sources).toEqual([
       {
         entryId: "active",
+        provider: "forecast_solar",
         remainingEntityId: "sensor.renamed_roof_remainder",
         tomorrowEntityId: "sensor.renamed_roof_tomorrow",
       },

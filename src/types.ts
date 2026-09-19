@@ -24,16 +24,28 @@ export interface CardConfig {
   production_today_entity?: string;
   /** Tomorrow's forecast sensor, read as it was at 19:00 two days earlier. */
   history_forecast_entity?: string;
+  /** Omit this field to prefer Forecast.Solar whenever it is installed. */
+  forecast_provider?: ForecastProvider;
 }
+
+export type ForecastProvider = "forecast_solar" | "solcast_solar";
 
 export interface ForecastSource {
   entryId: string;
+  /** Integration that owns this combined forecast source. */
+  provider?: ForecastProvider;
   remainingEntityId?: string;
   tomorrowEntityId?: string;
+  /** Active aggregate daily forecast sensors, indexed by days after today. */
+  dailyEntityIds?: Partial<Record<number, string>>;
+  /** Solcast's selected estimate sensor. It is absent for Forecast.Solar. */
+  estimateModeEntityId?: string;
 }
 
 export interface DataIssue {
   key: string;
+  /** Integration that produced this issue, when an integration is known. */
+  provider?: ForecastProvider;
   code:
     | "connection_unavailable"
     | "source_discovery_failed"
@@ -45,7 +57,11 @@ export interface DataIssue {
     | "history_unavailable"
     | "history_invalid"
     | "history_schema_invalid"
-    | "invalid_language";
+    | "invalid_language"
+    | "forecast_provider_invalid"
+    | "forecast_provider_unavailable"
+    | "solcast_ambiguous"
+    | "solcast_mode_invalid";
   sourceId?: string;
   entityId?: string;
   params?: Record<string, string | number>;
@@ -67,10 +83,14 @@ export interface SourceForecast {
   serviceFailed?: boolean;
   /** The installed Home Assistant version does not expose get_forecast. */
   unsupportedService?: boolean;
+  /** The source cannot use its service response and may use the dashboard fallback. */
+  fallbackEligible?: boolean;
   schemaInvalid?: boolean;
 }
 
 export interface ForecastPayload {
+  /** The provider selected for this payload, if an integration is available. */
+  provider?: ForecastProvider;
   sources: ForecastSource[];
   sourceForecasts: SourceForecast[];
   issues: DataIssue[];

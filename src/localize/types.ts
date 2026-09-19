@@ -27,6 +27,10 @@ export const translationKeys = [
   "name",
   "language",
   "languageAuto",
+  "forecastProvider",
+  "forecastProviderAuto",
+  "forecastProviderForecastSolar",
+  "forecastProviderSolcast",
   "productionTodayEntity",
   "productionTodayHelp",
   "historyForecastEntity",
@@ -42,6 +46,10 @@ export const translationKeys = [
   "warningHistoryConfiguration",
   "warningHistorySchema",
   "warningSchema",
+  "warningProviderInvalid",
+  "warningProviderUnavailable",
+  "warningSolcastAmbiguous",
+  "warningSolcastMode",
 ] as const;
 
 export type TranslationKey = (typeof translationKeys)[number];

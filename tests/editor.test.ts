@@ -3,14 +3,14 @@ import { SolarForecastCardEditor } from "../src/editor";
 import type { CardConfig } from "../src/types";
 
 describe("SolarForecastCardEditor", () => {
-  it("shows title, language, and the two optional energy entities", async () => {
+  it("shows title, language, provider, and the two optional energy entities", async () => {
     const editor = new SolarForecastCardEditor();
     editor.setConfig({ type: "custom:solar-forecast-card", language: "en" });
     document.body.append(editor);
     await editor.updateComplete;
 
     expect(editor.shadowRoot?.querySelectorAll("ha-textfield")).toHaveLength(1);
-    expect(editor.shadowRoot?.querySelectorAll("ha-select")).toHaveLength(1);
+    expect(editor.shadowRoot?.querySelectorAll("ha-select")).toHaveLength(2);
     expect(editor.shadowRoot?.querySelectorAll("ha-entity-picker")).toHaveLength(2);
     expect(editor.shadowRoot?.querySelector("[name='height'], #height, .height")).toBeNull();
     expect(editor.shadowRoot?.textContent?.toLowerCase()).not.toContain("height");
@@ -31,13 +31,23 @@ describe("SolarForecastCardEditor", () => {
     });
     await editor.updateComplete;
 
-    const language = editor.shadowRoot?.querySelector("ha-select") as HTMLElement & {
+    const language = editor.shadowRoot?.querySelectorAll("ha-select")[0] as HTMLElement & {
       value: string;
     };
     language.value = "de";
     language.dispatchEvent(new Event("selected"));
     await editor.updateComplete;
     expect((language as unknown as { label: string }).label).toBe("Sprache");
+
+    const provider = editor.shadowRoot?.querySelectorAll("ha-select")[1] as HTMLElement & {
+      value: string;
+    };
+    provider.value = "solcast_solar";
+    provider.dispatchEvent(new Event("selected"));
+    expect(changes.at(-1)?.forecast_provider).toBe("solcast_solar");
+    provider.value = "";
+    provider.dispatchEvent(new Event("selected"));
+    expect(changes.at(-1)?.forecast_provider).toBeUndefined();
 
     const entity = editor.shadowRoot?.querySelector("ha-entity-picker") as HTMLElement;
     entity.dispatchEvent(new CustomEvent("value-changed", { detail: { value: "" } }));

@@ -1,15 +1,13 @@
 # Release process
 
 The project does not release source changes automatically.
-The current source version is `0.3.0`.
-The approved release is `v0.3.0`.
+The current source version is `0.4.0`.
+The approved release is `v0.4.0`.
 
-The local release checks for `v0.3.0` passed.
-They include format, lint, type, test, build, and Git diff checks.
-The release asset is `dist/solar_forecast.js`.
-See [release verification](release-verification.md) for the recorded results.
+The local release checks for `v0.4.0` passed.
 The release is not yet published.
-This document does not confirm a commit, tag, or remote verification.
+The release asset will be `dist/solar_forecast.js`.
+See [release verification](release-verification.md) for the recorded `v0.4.0` results.
 
 Before a later release, propose the exact version.
 Wait for explicit approval for that version.
@@ -35,7 +33,7 @@ After approval, the release process will:
 10. Verify the tag, release asset, and clean Git status.
 
 The tag and GitHub release title will match exactly.
-For this release, both use `v0.3.0`.
+For this release, both use `v0.4.0`.
 
 The changelog will contain one user-visible change per bullet.
 It will use simple English.
